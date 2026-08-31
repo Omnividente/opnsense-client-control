@@ -47,16 +47,23 @@ Workflow [GitHub-only review](https://github.com/Omnividente/opnsense-client-con
 
 1. checkout точной ревизии;
 2. проверку наличия PHP `gettext` и `SimpleXML`, а также русской UTF-8 locale;
-3. `php -l` для всех PHP-файлов;
-4. `xmllint` для XML-моделей и форм;
-5. `shellcheck` для install/build/deploy/GC-сценариев;
-6. компиляцию Python API smoke-теста без его запуска;
-7. повторную компиляцию gettext-каталога;
-8. `tests/run.php` для Compiler, Planner, ScheduleEvaluator, контроллерных соглашений, переводов и защитных инвариантов;
-9. `git diff --exit-code` для сгенерированных переводов и контрольных сумм;
-10. отказ, если `.pkg`, `.txz`, `.build` или `dist` попали в tracked-файлы.
+3. отрицательный контроль PHP lint на намеренно повреждённом временном файле;
+4. `php -l` для каждого PHP-файла с сохранением ненулевого exit status и текста ошибки;
+5. `xmllint` для XML-моделей и форм;
+6. `shellcheck` для всех tracked `*.sh`, `+*.pre` и `+*.post`, найденных автоматически;
+7. закреплённый по версии и SHA256 `actionlint`, затем repository policy guard для triggers, permissions, runners и action SHA;
+8. отрицательные контроли workflow policy;
+9. компиляцию Python API smoke-теста без его запуска и self-test identity attestation;
+10. повторную компиляцию gettext-каталога;
+11. `tests/run.php` для Compiler, Planner, ScheduleEvaluator, контроллерных соглашений, переводов и защитных инвариантов;
+12. `git diff --exit-code` для сгенерированных переводов и контрольных сумм;
+13. отказ, если `.pkg`, `.txz`, `.build` или `dist` попали в tracked-файлы.
 
-Workflow не получает secrets, использует `GITHUB_TOKEN` только с правом `contents: read`, не применяет `pull_request_target` и не запускается на self-hosted runner. Единственный action закреплён на полном commit SHA.
+Workflow не получает configured secrets, использует `GITHUB_TOKEN` только с правом `contents: read`, не применяет `pull_request_target` и не запускается на self-hosted runner. Все remote actions закреплены на полном commit SHA.
+
+Версии пакетов из Ubuntu apt не закреплены побитово. Фактические версии Git, PHP, Python, ShellCheck, libxml2, gettext и actionlint печатаются в log и Job Summary. Поэтому повторный run того же SHA может отличаться при изменении GitHub runner image или apt repository; это явная граница доказательства, а не скрытая гарантия воспроизводимости.
+
+Ветка `main` защищается GitHub ruleset: изменение проходит через pull request и обязательный check `Repository checks`. Активные правила видны через [публичный branch rules API](https://api.github.com/repos/Omnividente/opnsense-client-control/rules/branches/main). Ruleset не доказывает независимость человека: без назначенного внешнего reviewer он обеспечивает PR и CI-шлюз, но не заменяет identity attestation и отдельный отчёт.
 
 ## Порядок проверки в веб-интерфейсе GitHub
 
@@ -161,6 +168,10 @@ GitHub Secret scanning полезен как дополнительный сиг
 
 Откройте форму [«Независимая GitHub-проверка»](https://github.com/Omnividente/opnsense-client-control/issues/new?template=independent-review.yml).
 
+Workflow **Review identity attestation** получает фактического автора issue из GitHub event, извлекает полный SHA и сравнивает login с доступными identities commit, связанного pull request и Actions runs. Он публикует один обновляемый комментарий со статусом `SELF-REVIEW`, `CANDIDATE`, `UNVERIFIED` или `INVALID`. Путь через API может обойти обязательные поля формы, но не может подменить `issue.user.login` в GitHub event.
+
+`CANDIDATE` означает только отсутствие найденного совпадения identities. Это не доказательство человеческой независимости или полноты проверки.
+
 Для каждого замечания укажите:
 
 - важность: блокирует / высокая / обычная / небольшая;
@@ -203,6 +214,7 @@ GitHub Secret scanning полезен как дополнительный сиг
 Проверка завершена, когда:
 
 - проверяющий не является автором проверяемого SHA;
+- автоматический attestation не пометил отчёт как `SELF-REVIEW`, `INVALID` или `UNVERIFIED`;
 - workflow и его права изучены до доверия к результату;
 - Actions run для точного SHA завершён и его logs просмотрены;
 - каждый защитный инвариант связан с кодом и тестом либо оформлен как пробел;
