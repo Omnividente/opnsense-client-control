@@ -6,15 +6,41 @@ PHP=${PHP:-php}
 PYTHON=${PYTHON:-python3}
 SHELLCHECK=${SHELLCHECK:-shellcheck}
 XMLLINT=${XMLLINT:-xmllint}
+ACTIONLINT=${ACTIONLINT:-actionlint}
+TMP=
 
 cd "$ROOT"
 
-for tool in git msgfmt "$PHP" "$PYTHON" "$SHELLCHECK" "$XMLLINT"; do
+for tool in git msgfmt find xargs sed "$PHP" "$PYTHON" "$SHELLCHECK" "$XMLLINT" "$ACTIONLINT"; do
     command -v "$tool" >/dev/null 2>&1 || {
         echo "missing GitHub review tool: $tool" >&2
         exit 1
     }
 done
+
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/client-control-github-checks.XXXXXX")
+trap 'rm -rf "${TMP:-}"' EXIT HUP INT TERM
+
+tool_versions() {
+    git --version
+    "$PHP" -r 'echo "PHP ", PHP_VERSION, "\n";'
+    "$PYTHON" --version 2>&1
+    "$SHELLCHECK" --version | sed -n '2p'
+    "$XMLLINT" --version 2>&1 | sed -n '1p'
+    msgfmt --version | sed -n '1p'
+    "$ACTIONLINT" -version
+}
+
+tool_versions
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+        echo '### Validation tool versions'
+        echo
+        echo '```text'
+        tool_versions
+        echo '```'
+    } >> "$GITHUB_STEP_SUMMARY"
+fi
 
 # The PHP snippet is single-quoted deliberately so the shell cannot expand PHP variables.
 # shellcheck disable=SC2016
@@ -31,22 +57,34 @@ if (setlocale(LC_MESSAGES, "ru_RU.UTF-8") === false) {
 }
 '
 
-find src tests -type f -name '*.php' -exec "$PHP" -l {} \; >/dev/null
+php_lint_tree() {
+    find "$@" -type f -name '*.php' -print0 |
+        xargs -0 -r -n1 "$PHP" -l
+}
+
+printf '%s\n' '<?php function intentionally_broken( {' > "$TMP/invalid.php"
+if php_lint_tree "$TMP" >/dev/null 2>&1; then
+    echo 'PHP lint negative control unexpectedly passed' >&2
+    exit 1
+fi
+printf 'ok PHP lint negative control\n'
+php_lint_tree src tests
+
 find src -type f -name '*.xml' -exec "$XMLLINT" --noout {} +
 
-"$SHELLCHECK" \
-    +POST_DEINSTALL.post \
-    +POST_INSTALL.post \
-    +PRE_DEINSTALL.pre \
-    tools/bootstrap-build-kit.sh \
-    tools/build-local.sh \
-    tools/compile-translations.sh \
-    tools/deploy.sh \
-    tools/gc-artifacts.sh \
-    tools/github-checks.sh
+git ls-files -z -- '*.sh' '+*.pre' '+*.post' |
+    xargs -0 -r "$SHELLCHECK"
 
-"$PYTHON" -m py_compile tests/api-smoke.py
-rm -rf tests/__pycache__
+"$ACTIONLINT" -color
+"$PYTHON" tools/workflow-policy.py --self-test
+"$PYTHON" tools/workflow-policy.py .github/workflows/*.yml
+
+"$PYTHON" -m py_compile \
+    tests/api-smoke.py \
+    tools/review-attestation.py \
+    tools/workflow-policy.py
+rm -rf tests/__pycache__ tools/__pycache__
+"$PYTHON" tools/review-attestation.py --self-test
 
 "$ROOT/tools/compile-translations.sh" >/dev/null
 LANG=ru_RU.UTF-8 LC_ALL=ru_RU.UTF-8 "$PHP" tests/run.php

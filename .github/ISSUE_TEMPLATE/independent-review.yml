@@ -6,7 +6,16 @@ body:
     attributes:
       value: |
         Используйте [план GitHub-only проверки](https://github.com/Omnividente/opnsense-client-control/blob/main/docs/REVIEW_PLAN_RU.md).
-        Зелёный CI не подтверждает работу на реальном TING/OPNsense.
+        Зелёный CI не подтверждает работу на реальном TING/OPNsense. После публикации workflow автоматически сравнит фактического автора issue с identities commit, pull request и Actions run.
+
+  - type: input
+    id: reviewer-login
+    attributes:
+      label: GitHub-логин проверяющего
+      description: Укажите свой GitHub login. Он должен совпадать с фактическим автором issue.
+      placeholder: octocat
+    validations:
+      required: true
 
   - type: input
     id: reviewed-sha

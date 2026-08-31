@@ -1,0 +1,42 @@
+name: Review identity attestation
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Review issue number to classify
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: review-attestation-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: true
+
+jobs:
+  attest:
+    name: Review attestation
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[Review]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out trusted default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Classify report identity
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REVIEW_ISSUE_NUMBER: ${{ inputs.issue_number || github.event.issue.number }}
+        run: python3 tools/review-attestation.py
