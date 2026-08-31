@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 MODE=${1:---dry-run}
 ACTIVE=${2:-}
 OUT="$ROOT/dist"
@@ -52,14 +52,14 @@ rollback_records() {
 }
 
 count=0
-candidate_records | sort -rn | while IFS="$(printf '\t')" read -r timestamp file; do
+candidate_records | sort -rn | while IFS="$(printf '\t')" read -r _ file; do
     count=$((count + 1))
     [ "$count" -le 2 ] && continue
     remove_file "$file"
 done
 
 count=0
-rollback_records | sort -rn | while IFS="$(printf '\t')" read -r timestamp file; do
+rollback_records | sort -rn | while IFS="$(printf '\t')" read -r _ file; do
     count=$((count + 1))
     [ "$count" -le 2 ] && continue
     remove_file "$file"

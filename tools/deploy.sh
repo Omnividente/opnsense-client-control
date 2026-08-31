@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 TARGET=${1:?usage: tools/deploy.sh root@opnsense-host}
 TARGET_VERSION=${TARGET_VERSION:-24.7}
 VERSION=$(awk '/^PLUGIN_VERSION=/{print $2}' "$ROOT/Makefile")

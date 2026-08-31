@@ -1,0 +1,107 @@
+name: Оценка новой функции
+description: Проверяемая оценка пользы, риска и стоимости функции
+title: "[Feature evaluation] "
+body:
+  - type: textarea
+    id: user-task
+    attributes:
+      label: Задача пользователя
+      description: Какую конкретную повторяющуюся задачу нужно решить?
+    validations:
+      required: true
+
+  - type: input
+    id: affected-users
+    attributes:
+      label: Кто и как часто сталкивается
+      placeholder: Администратор сети, несколько раз в неделю
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-workaround
+    attributes:
+      label: Текущий способ решения
+      description: Какие действия приходится выполнять сейчас и где возникает риск?
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal-change
+    attributes:
+      label: Минимальное предлагаемое изменение
+      description: Опишите поведение, а не желаемую архитектуру.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: access-risk
+    attributes:
+      label: Риск для доступа и конфигурации
+      options:
+        - Небольшой
+        - Обычный
+        - Высокий
+        - Блокирующий
+    validations:
+      required: true
+
+  - type: dropdown
+    id: maintenance-cost
+    attributes:
+      label: Стоимость сопровождения
+      options:
+        - Небольшая
+        - Средняя
+        - Высокая
+        - Не определена
+    validations:
+      required: true
+
+  - type: textarea
+    id: github-proof
+    attributes:
+      label: Что можно доказать в GitHub
+      description: Назовите автоматические тесты, статические инварианты и документацию.
+    validations:
+      required: true
+
+  - type: textarea
+    id: runtime-proof
+    attributes:
+      label: Какой runtime-тест всё равно нужен
+      description: Укажите реальный сценарий TING/OPNsense, который GitHub Actions не заменяет.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: design-constraints
+    attributes:
+      label: Проверка границ решения
+      options:
+        - label: Изменение не создаёт второй источник истины без необходимости.
+          required: true
+        - label: Изменение сохраняет preview-before-apply.
+          required: true
+        - label: Для наблюдаемого результата предложен детерминированный тест.
+          required: true
+
+  - type: dropdown
+    id: recommendation
+    attributes:
+      label: Рекомендация
+      options:
+        - Принять
+        - Уточнить
+        - Отложить
+        - Отклонить
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Обоснование решения
+      description: Свяжите пользу, риск, стоимость и доказательства.
+    validations:
+      required: true

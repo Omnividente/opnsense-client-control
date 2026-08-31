@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 MSGFMT=${MSGFMT:-msgfmt}
 PO="$ROOT/translations/ru_RU.po"
 MO="$ROOT/src/share/locale/ru_RU/LC_MESSAGES/os-client-control.mo"

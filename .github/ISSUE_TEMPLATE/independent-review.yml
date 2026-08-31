@@ -1,0 +1,92 @@
+name: Независимая GitHub-проверка
+description: Отчёт о проверке исходников только через GitHub web UI и GitHub Actions
+title: "[Review] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Используйте [план GitHub-only проверки](https://github.com/Omnividente/opnsense-client-control/blob/main/docs/REVIEW_PLAN_RU.md).
+        Зелёный CI не подтверждает работу на реальном TING/OPNsense.
+
+  - type: input
+    id: reviewed-sha
+    attributes:
+      label: Проверенный commit SHA
+      description: Полный 40-символьный SHA проверенной ревизии.
+      placeholder: 0123456789abcdef0123456789abcdef01234567
+    validations:
+      required: true
+
+  - type: input
+    id: actions-run
+    attributes:
+      label: GitHub Actions run
+      description: Ссылка на GitHub-only review run для этого SHA.
+      placeholder: https://github.com/owner/repository/actions/runs/...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: evidence-reviewed
+    attributes:
+      label: Просмотренная доказательная база
+      options:
+        - label: Я проверил workflow, permissions, runner и закрепление actions по SHA.
+          required: true
+        - label: Я открыл logs каждого step, а не только общий зелёный статус.
+          required: true
+        - label: Я просмотрел Files changed, историю и защитные инварианты из плана.
+          required: true
+        - label: Я отделил GitHub-проверяемые свойства от runtime-свойств OPNsense.
+          required: true
+
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Итог по GitHub-проверяемой части
+      options:
+        - Исходники можно принять
+        - Нужны исправления
+        - Проверка заблокирована
+    validations:
+      required: true
+
+  - type: textarea
+    id: findings
+    attributes:
+      label: Найденные проблемы и доказательства
+      description: Для каждого пункта укажите важность, permalink, ожидаемое и найденное поведение, риск и минимальное исправление.
+      placeholder: |
+        1. Важность:
+           Permalink:
+           Ожидалось:
+           Найдено:
+           Риск:
+           Исправление:
+    validations:
+      required: true
+
+  - type: textarea
+    id: runtime-gaps
+    attributes:
+      label: Что осталось непроверенным без runtime-стенда
+      description: Не переносите сюда предположения как успешный результат.
+      value: |
+        - Установка пакета на TING/OPNsense
+        - Загрузка firewall/IPFW/Traffic Shaper
+        - Реальный доступ, блокировка и ограничение скорости
+        - ARP/NDP, расписания, обновление и откат
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: independence
+    attributes:
+      label: Независимость отчёта
+      options:
+        - label: Я не являюсь автором проверенного commit или pull request.
+          required: true
+        - label: Для проверки я использовал только публичные возможности GitHub.
+          required: true
+        - label: Я не называю проект готовым к production без runtime-проверки.
+          required: true

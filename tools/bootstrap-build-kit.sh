@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 DEST="$ROOT/.build/opnsense-plugins"
 REPOSITORY=https://github.com/opnsense/plugins.git
 REVISION=8e4722853f817032a2c6ad63a67623298dd8d955
