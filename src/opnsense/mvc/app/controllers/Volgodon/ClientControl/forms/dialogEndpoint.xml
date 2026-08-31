@@ -1,0 +1,26 @@
+<form>
+    <field>
+        <id>endpoint.client</id>
+        <label>Client</label>
+        <type>dropdown</type>
+        <help>Select the client that uses this address.</help>
+    </field>
+    <field>
+        <id>endpoint.kind</id>
+        <label>Address type</label>
+        <type>dropdown</type>
+        <help>Choose IPv4, IPv6, or MAC.</help>
+    </field>
+    <field>
+        <id>endpoint.value</id>
+        <label>Address</label>
+        <type>text</type>
+        <help>Enter one full IP or MAC address. The same address cannot belong to two enabled clients.</help>
+    </field>
+    <field>
+        <id>endpoint.label</id>
+        <label>Device note</label>
+        <type>text</type>
+        <help>Optional note, for example “Laptop Wi-Fi” or “Work phone”.</help>
+    </field>
+</form>

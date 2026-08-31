@@ -1,0 +1,4 @@
+# Client Control schedule transitions
+SHELL=/bin/sh
+PATH=/etc:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+* * * * * root /usr/local/sbin/configctl -q clientcontrol schedule

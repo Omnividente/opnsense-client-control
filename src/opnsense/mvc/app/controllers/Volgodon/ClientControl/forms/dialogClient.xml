@@ -1,0 +1,108 @@
+<form>
+    <field>
+        <id>client.name</id>
+        <label>Client name</label>
+        <type>text</type>
+        <help>Use a name that identifies the person or device without checking its address.</help>
+        <grid_view><label>Client</label></grid_view>
+    </field>
+    <field>
+        <id>client.group</id>
+        <label>Group</label>
+        <type>dropdown</type>
+        <help>The client normally receives access and speed settings from this group.</help>
+    </field>
+    <field>
+        <id>client.endpoints_text</id>
+        <type>hidden</type>
+        <grid_view><label>Addresses</label><visible>true</visible></grid_view>
+    </field>
+    <field>
+        <id>client.access</id>
+        <type>hidden</type>
+        <grid_view><label>Access</label><visible>true</visible><formatter>accessState</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.download</id>
+        <type>hidden</type>
+        <grid_view><label>Download limit</label><visible>true</visible><formatter>effectiveRate</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.upload</id>
+        <type>hidden</type>
+        <grid_view><label>Upload limit</label><visible>true</visible><formatter>effectiveRate</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.online</id>
+        <type>hidden</type>
+        <grid_view><label>Network</label><visible>true</visible><formatter>onlineState</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.sync_state</id>
+        <type>hidden</type>
+        <grid_view><label>Rules</label><visible>true</visible><formatter>syncState</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.enabled</id>
+        <label>Client enabled</label>
+        <type>checkbox</type>
+        <help>Disabled clients remain in the list but do not receive access through this module.</help>
+        <grid_view><label>Enabled</label><width>6em</width><type>boolean</type><formatter>boolean</formatter></grid_view>
+    </field>
+    <field>
+        <id>client.metric</id>
+        <type>hidden</type>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.state_count</id>
+        <type>hidden</type>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.comment</id>
+        <label>Note</label>
+        <type>text</type>
+        <help>Optional note for administrators.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.access_override</id>
+        <label>Access for this client</label>
+        <type>dropdown</type>
+        <advanced>true</advanced>
+        <help>Keep the group setting unless this client needs a separate access rule.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.shaping_override</id>
+        <label>Speed for this client</label>
+        <type>dropdown</type>
+        <advanced>true</advanced>
+        <help>Keep the group setting, remove the limit, or set a separate limit for this client.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.download_override</id>
+        <label>Client download limit</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Used only when a separate speed limit is selected above.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.upload_override</id>
+        <label>Client upload limit</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Used only when a separate speed limit is selected above.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>client.metric_override</id>
+        <label>Client speed unit</label>
+        <type>dropdown</type>
+        <advanced>true</advanced>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+</form>

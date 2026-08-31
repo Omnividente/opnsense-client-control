@@ -1,0 +1,39 @@
+<acl>
+    <clientcontrol-view>
+        <name>Client Control: View</name>
+        <patterns>
+            <pattern>ui/clientcontrol/*</pattern>
+            <pattern>api/clientcontrol/*/search*</pattern>
+            <pattern>api/clientcontrol/*/get*</pattern>
+            <pattern>api/clientcontrol/*/status*</pattern>
+            <pattern>api/clientcontrol/*/plan*</pattern>
+            <pattern>api/clientcontrol/*/scan*</pattern>
+            <pattern>api/clientcontrol/*/preview*</pattern>
+            <pattern>api/clientcontrol/*/runtime*</pattern>
+            <pattern>api/clientcontrol/*/audit*</pattern>
+        </patterns>
+    </clientcontrol-view>
+    <clientcontrol-manage>
+        <name>Client Control: Manage</name>
+        <patterns>
+            <pattern>ui/clientcontrol/*</pattern>
+            <pattern>api/clientcontrol/*/search*</pattern>
+            <pattern>api/clientcontrol/*/get*</pattern>
+            <pattern>api/clientcontrol/*/status*</pattern>
+            <pattern>api/clientcontrol/*/plan*</pattern>
+            <pattern>api/clientcontrol/*/scan*</pattern>
+            <pattern>api/clientcontrol/*/preview*</pattern>
+            <pattern>api/clientcontrol/*/runtime*</pattern>
+            <pattern>api/clientcontrol/*/audit*</pattern>
+            <pattern>api/clientcontrol/*/add*</pattern>
+            <pattern>api/clientcontrol/*/set*</pattern>
+            <pattern>api/clientcontrol/*/del*</pattern>
+            <pattern>api/clientcontrol/*/toggle*</pattern>
+            <pattern>api/clientcontrol/*/bulk*</pattern>
+            <pattern>api/clientcontrol/*/copy*</pattern>
+            <pattern>api/clientcontrol/import/apply*</pattern>
+            <pattern>api/clientcontrol/service/apply*</pattern>
+            <pattern>api/clientcontrol/service/reconcile*</pattern>
+        </patterns>
+    </clientcontrol-manage>
+</acl>

@@ -1,0 +1,287 @@
+<model>
+    <mount>//Volgodon/ClientControl</mount>
+    <version>1.0.0</version>
+    <description>Client access and bandwidth management</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <revision type="IntegerField">
+                <Default>0</Default>
+                <MinimumValue>0</MinimumValue>
+                <Required>Y</Required>
+            </revision>
+            <protected_interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+                <AllowDynamic>Y</AllowDynamic>
+            </protected_interfaces>
+            <wan_interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+                <AllowDynamic>Y</AllowDynamic>
+            </wan_interfaces>
+            <enforcement_mode type="OptionField">
+                <Default>observe</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <observe>Observe</observe>
+                    <enforce>Enforce</enforce>
+                </OptionValues>
+            </enforcement_mode>
+            <destination_scope type="OptionField">
+                <Default>any</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <any>Any destination</any>
+                    <wan>WAN / non-private destinations</wan>
+                    <custom>Custom alias</custom>
+                </OptionValues>
+            </destination_scope>
+            <destination_alias type="NetworkAliasField"/>
+            <stale_neighbor_policy type="OptionField">
+                <Default>deny</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <deny>Deny unresolved MAC endpoints</deny>
+                </OptionValues>
+            </stale_neighbor_policy>
+            <last_applied_revision type="IntegerField">
+                <Default>0</Default>
+                <MinimumValue>0</MinimumValue>
+                <Required>Y</Required>
+            </last_applied_revision>
+            <last_apply_status type="OptionField">
+                <Default>never</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <never>Never applied</never>
+                    <ok>Applied</ok>
+                    <error>Error</error>
+                    <conflict>Conflict</conflict>
+                </OptionValues>
+            </last_apply_status>
+            <last_apply_message type="TextField"/>
+            <last_apply_time type="TextField"/>
+        </general>
+        <groups>
+            <group type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[^\x00-\x1F]{1,80}$/u</Mask>
+                    <Constraints>
+                        <check001>
+                            <type>UniqueConstraint</type>
+                            <ValidationMessage>A group with this name already exists.</ValidationMessage>
+                        </check001>
+                    </Constraints>
+                </name>
+                <description type="DescriptionField"/>
+                <access type="OptionField">
+                    <Default>allow</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <allow>Allow</allow>
+                        <block>Block</block>
+                    </OptionValues>
+                </access>
+                <shaping_mode type="OptionField">
+                    <Default>unlimited</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <unlimited>Unlimited</unlimited>
+                        <per_client>Per client</per_client>
+                        <shared>Shared</shared>
+                    </OptionValues>
+                </shaping_mode>
+                <download type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>1000000</MaximumValue>
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </download>
+                <upload type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>1000000</MaximumValue>
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </upload>
+                <metric type="OptionField">
+                    <Default>Mbit</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <Kbit>Kbit/s</Kbit>
+                        <Mbit>Mbit/s</Mbit>
+                        <Gbit>Gbit/s</Gbit>
+                    </OptionValues>
+                </metric>
+                <schedule type=".\ScheduleField"/>
+                <max_states type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>2147483647</MaximumValue>
+                    <Default>0</Default>
+                </max_states>
+                <max_tcp_connections type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>2147483647</MaximumValue>
+                    <Default>0</Default>
+                </max_tcp_connections>
+                <connection_rate type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>4294967</MaximumValue>
+                    <Default>0</Default>
+                </connection_rate>
+                <connection_rate_seconds type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>2147483647</MaximumValue>
+                    <Default>0</Default>
+                </connection_rate_seconds>
+                <packet_rate type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>4294967</MaximumValue>
+                    <Default>0</Default>
+                </packet_rate>
+                <packet_rate_seconds type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>2147483647</MaximumValue>
+                    <Default>0</Default>
+                </packet_rate_seconds>
+            </group>
+        </groups>
+        <clients>
+            <client type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>0</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[^\x00-\x1F]{1,120}$/u</Mask>
+                    <Constraints>
+                        <check001>
+                            <type>UniqueConstraint</type>
+                            <ValidationMessage>A client with this name already exists.</ValidationMessage>
+                        </check001>
+                    </Constraints>
+                </name>
+                <group type="TextField">
+                    <Mask>/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i</Mask>
+                    <ValidationMessage>Related group identifier is invalid.</ValidationMessage>
+                </group>
+                <comment type="DescriptionField"/>
+                <access_override type="OptionField">
+                    <Default>inherit</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <inherit>Inherit</inherit>
+                        <allow>Allow</allow>
+                        <block>Block</block>
+                    </OptionValues>
+                </access_override>
+                <shaping_override type="OptionField">
+                    <Default>inherit</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <inherit>Inherit</inherit>
+                        <unlimited>Unlimited</unlimited>
+                        <limited>Limited</limited>
+                    </OptionValues>
+                </shaping_override>
+                <download_override type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>1000000</MaximumValue>
+                    <Default>0</Default>
+                </download_override>
+                <upload_override type="IntegerField">
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>1000000</MaximumValue>
+                    <Default>0</Default>
+                </upload_override>
+                <metric_override type="OptionField">
+                    <Default>Mbit</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <Kbit>Kbit/s</Kbit>
+                        <Mbit>Mbit/s</Mbit>
+                        <Gbit>Gbit/s</Gbit>
+                    </OptionValues>
+                </metric_override>
+            </client>
+        </clients>
+        <endpoints>
+            <endpoint type="ArrayField">
+                <client type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i</Mask>
+                    <ValidationMessage>Related client identifier is invalid.</ValidationMessage>
+                </client>
+                <kind type="OptionField">
+                    <Default>ipv4</Default>
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <ipv4>IPv4</ipv4>
+                        <ipv6>IPv6</ipv6>
+                        <mac>MAC</mac>
+                    </OptionValues>
+                </kind>
+                <value type=".\EndpointValueField">
+                    <Required>Y</Required>
+                    <ValidationMessage>Enter a valid address matching the selected endpoint type.</ValidationMessage>
+                </value>
+                <label type="DescriptionField"/>
+            </endpoint>
+        </endpoints>
+        <managed_objects>
+            <object type="ArrayField">
+                <logical_id type="TextField">
+                    <Required>Y</Required>
+                </logical_id>
+                <owner_type type="OptionField">
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <system>System</system>
+                        <group>Group</group>
+                        <client>Client</client>
+                    </OptionValues>
+                </owner_type>
+                <owner_uuid type="TextField">
+                    <Required>Y</Required>
+                </owner_uuid>
+                <core_type type="OptionField">
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <category>Category</category>
+                        <alias>Alias</alias>
+                        <filter_rule>Filter rule</filter_rule>
+                        <pipe>Pipe</pipe>
+                        <shaper_rule>Shaper rule</shaper_rule>
+                    </OptionValues>
+                </core_type>
+                <core_uuid type="TextField"/>
+                <core_name type="TextField">
+                    <Required>Y</Required>
+                </core_name>
+                <desired_fingerprint type="TextField"/>
+                <applied_fingerprint type="TextField"/>
+                <applied_state type="TextField"/>
+            </object>
+        </managed_objects>
+        <audit>
+            <entry type="ArrayField">
+                <timestamp type="TextField"><Required>Y</Required></timestamp>
+                <username type="TextField"><Required>Y</Required></username>
+                <operation type="TextField"><Required>Y</Required></operation>
+                <summary type="TextField"/>
+                <result type="OptionField">
+                    <Default>ok</Default>
+                    <Required>Y</Required>
+                    <OptionValues><ok>OK</ok><error>Error</error></OptionValues>
+                </result>
+            </entry>
+        </audit>
+    </items>
+</model>

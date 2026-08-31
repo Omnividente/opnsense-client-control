@@ -1,0 +1,9 @@
+Client Control keeps network clients, their addresses, groups, access, and
+speed limits in one OPNsense page. Before changing traffic, it shows the exact
+aliases, firewall rules, and Traffic Shaper objects that will be created,
+updated, or removed.
+
+The plugin starts disabled. Saving a form does not reload firewall rules.
+Existing aliases can be imported without editing or deleting the source
+aliases. Objects changed outside Client Control are reported instead of being
+silently overwritten.

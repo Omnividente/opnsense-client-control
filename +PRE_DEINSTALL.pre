@@ -1,0 +1,128 @@
+#!/bin/sh
+set -eu
+UNINSTALL_MARKER=/var/run/clientcontrol-uninstalling
+touch "$UNINSTALL_MARKER"
+rm -f /var/lib/php/cache/_usr_local_opnsense_mvc_app_views_volgodon_clientcontrol_index.volt.php
+rm -f /var/run/clientcontrol-schedule.json /var/run/clientcontrol-schedule.lock
+
+
+# Default uninstall is non-destructive. Explicitly opt in with:
+#   env DEINSTALL_CONTROLLED_OBJECTS=1 pkg delete os-client-control
+if [ "${DEINSTALL_CONTROLLED_OBJECTS:-0}" != "1" ]; then
+    exit 0
+fi
+
+/usr/local/bin/php <<'PHP'
+<?php
+require_once('/usr/local/etc/inc/config.inc');
+
+use OPNsense\Core\Config;
+use OPNsense\Firewall\Alias;
+use OPNsense\Firewall\Category;
+use OPNsense\Firewall\Filter;
+use OPNsense\TrafficShaper\TrafficShaper;
+use Volgodon\ClientControl\ClientControl;
+use Volgodon\ClientControl\Platform;
+
+$config = Config::getInstance();
+$config->lock();
+try {
+    $registry = new ClientControl();
+    $filter = Platform::usesRuntimeFilterRegistry() ? null : new Filter();
+    $alias = new Alias();
+    $category = new Category();
+    $shaper = new TrafficShaper();
+    $categoryUuid = '';
+
+    $registryRecords = [];
+    foreach ($registry->managed_objects->object->iterateItems() as $recordUuid => $record) {
+        $registryRecords[] = $recordUuid;
+        $type = (string)$record->core_type;
+        $uuid = (string)$record->core_uuid;
+        $name = (string)$record->core_name;
+        if ($uuid === '') {
+            continue;
+        }
+
+        if ($type === 'filter_rule') {
+            if ($filter !== null) {
+                $node = $filter->getNodeByReference('rules.rule.' . $uuid);
+                if ($node !== null && str_contains((string)$node->description, 'ClientControl name=' . $name)) {
+                    $filter->rules->rule->del($uuid);
+                }
+            }
+        } elseif ($type === 'shaper_rule') {
+            $node = $shaper->getNodeByReference('rules.rule.' . $uuid);
+            if ($node !== null && (string)$node->origin === 'ClientControl' &&
+                str_contains((string)$node->description, 'ClientControl name=' . $name)) {
+                $shaper->rules->rule->del($uuid);
+            }
+        } elseif ($type === 'pipe') {
+            $node = $shaper->getNodeByReference('pipes.pipe.' . $uuid);
+            if ($node !== null && (string)$node->origin === 'ClientControl' &&
+                str_contains((string)$node->description, 'ClientControl name=' . $name)) {
+                $shaper->pipes->pipe->del($uuid);
+            }
+        } elseif ($type === 'alias') {
+            $node = $alias->getNodeByReference('aliases.alias.' . $uuid);
+            if ($node !== null && (string)$node->name === $name && str_starts_with($name, 'CC_') &&
+                str_starts_with((string)$node->description, 'ClientControl ')) {
+                $alias->aliases->alias->del($uuid);
+            }
+        } elseif ($type === 'category') {
+            $node = $category->getNodeByReference('categories.category.' . $uuid);
+            if ($node !== null && (string)$node->name === 'ClientControl') {
+                $categoryUuid = $uuid;
+            }
+        }
+    }
+    foreach ($registryRecords as $recordUuid) {
+        $registry->managed_objects->object->del($recordUuid);
+    }
+    $registry->general->last_applied_revision = '0';
+    $registry->general->last_apply_status = 'never';
+    $registry->general->last_apply_message = 'Controlled uninstall removed registered core objects.';
+    $registry->general->last_apply_time = gmdate('c');
+
+    if ($categoryUuid !== '') {
+        $categoryInUse = false;
+        foreach ($alias->aliases->alias->iterateItems() as $node) {
+            if (in_array($categoryUuid, explode(',', (string)$node->categories), true)) {
+                $categoryInUse = true;
+                break;
+            }
+        }
+        if (!$categoryInUse && $filter !== null) {
+            foreach ($filter->rules->rule->iterateItems() as $node) {
+                if (in_array($categoryUuid, explode(',', (string)$node->categories), true)) {
+                    $categoryInUse = true;
+                    break;
+                }
+            }
+        }
+        if (!$categoryInUse) {
+            $category->categories->category->del($categoryUuid);
+        }
+    }
+
+    if ($filter !== null) {
+        $filter->serializeToConfig(false, true);
+    }
+    $shaper->serializeToConfig(false, true);
+    $alias->serializeToConfig(false, true);
+    $category->serializeToConfig(false, true);
+    $registry->serializeToConfig(false, true);
+    $config->save(['description' => 'Remove registered Client Control objects']);
+} finally {
+    $config->unlock();
+}
+PHP
+
+configctl template reload OPNsense/Filter >/dev/null 2>&1 || :
+configctl filter refresh_aliases >/dev/null 2>&1 || :
+configctl template reload OPNsense/Shaper >/dev/null 2>&1 || :
+configctl template reload OPNsense/IPFW >/dev/null 2>&1 || :
+configctl ipfw flush >/dev/null 2>&1 || :
+configctl filter reload >/dev/null 2>&1 || :
+configctl shaper reload >/dev/null 2>&1 || :
+configctl ipfw reload >/dev/null 2>&1 || :

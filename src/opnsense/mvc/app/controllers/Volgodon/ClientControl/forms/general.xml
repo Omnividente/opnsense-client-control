@@ -1,0 +1,47 @@
+<form>
+    <field>
+        <id>general.enabled</id>
+        <label>Enable Client Control</label>
+        <type>checkbox</type>
+        <help>Saved groups and clients stay in place when this is off. Traffic changes only after you review and apply them.</help>
+    </field>
+    <field>
+        <id>general.protected_interfaces</id>
+        <label>Client networks</label>
+        <type>select_multiple</type>
+        <help>Select the interfaces where client traffic enters the firewall. In a typical setup this is LAN.</help>
+    </field>
+    <field>
+        <id>general.wan_interfaces</id>
+        <label>Internet interfaces</label>
+        <type>select_multiple</type>
+        <help>Select the interfaces that carry traffic to the internet. In a typical setup this is WAN.</help>
+    </field>
+    <field>
+        <id>general.enforcement_mode</id>
+        <label>Work mode</label>
+        <type>dropdown</type>
+        <help>Preview only shows what would change. Apply rules allows the reviewed access and speed rules to become active.</help>
+    </field>
+    <field>
+        <id>general.destination_scope</id>
+        <label>Apply rules to</label>
+        <type>dropdown</type>
+        <help>Choose whether client rules cover all destinations, internet traffic only, or addresses from one existing alias.</help>
+    </field>
+    <field>
+        <id>general.destination_alias</id>
+        <label>Destination alias</label>
+        <type>text</type>
+        <help>Fill this only when “Selected alias” is chosen above.</help>
+    </field>
+    <field>
+        <id>general.stale_neighbor_policy</id>
+        <type>hidden</type>
+    </field>
+    <field>
+        <id>general.revision</id>
+        <label>Settings version</label>
+        <type>hidden</type>
+    </field>
+</form>

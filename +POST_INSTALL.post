@@ -1,0 +1,9 @@
+#!/bin/sh
+rm -f /var/run/clientcontrol-uninstalling
+
+# Installation is intentionally non-invasive. The model defaults to disabled
+# and preview-only; administrators must review and apply an exact plan in UI.
+configctl template reload OPNsense/Menu >/dev/null 2>&1 || :
+configctl cron restart >/dev/null 2>&1 || :
+rm -f /var/lib/php/cache/_usr_local_opnsense_mvc_app_views_volgodon_clientcontrol_index.volt.php
+configctl webgui restart >/dev/null 2>&1 || :

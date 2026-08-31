@@ -1,0 +1,121 @@
+<form>
+    <field>
+        <id>group.enabled</id>
+        <label>Group enabled</label>
+        <type>checkbox</type>
+        <help>Disabled groups do not grant access and do not create speed limits.</help>
+        <grid_view><label>Enabled</label><width>6em</width><type>boolean</type><formatter>boolean</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.name</id>
+        <label>Group name</label>
+        <type>text</type>
+        <help>Use a name that is clear to an operator, for example “Office”, “Guests”, or “No internet”.</help>
+    </field>
+    <field>
+        <id>group.description</id>
+        <label>Description</label>
+        <type>text</type>
+        <help>Optional note about who belongs to this group and why.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.access</id>
+        <label>Internet access</label>
+        <type>dropdown</type>
+        <help>Allow lets enabled clients use the selected destinations. Block denies that traffic.</help>
+        <grid_view><label>Access</label><formatter>access</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.shaping_mode</id>
+        <label>Speed limit</label>
+        <type>dropdown</type>
+        <help>Choose no limit, a separate limit for every client, or one shared limit for the whole group.</help>
+        <grid_view><formatter>shaping</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.members</id>
+        <type>hidden</type>
+        <grid_view><label>Clients</label><visible>true</visible></grid_view>
+    </field>
+    <field>
+        <id>group.download</id>
+        <label>Download limit</label>
+        <type>text</type>
+        <help>Maximum speed from the internet to clients in this group.</help>
+        <grid_view><formatter>effectiveRate</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.upload</id>
+        <label>Upload limit</label>
+        <type>text</type>
+        <help>Maximum speed from clients in this group to the internet.</help>
+        <grid_view><formatter>effectiveRate</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.metric</id>
+        <label>Speed unit</label>
+        <type>dropdown</type>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.schedule</id>
+        <label>Schedule</label>
+        <type>dropdown</type>
+        <help>Optional OPNsense firewall schedule. Leave empty when the group must work all the time.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.sync_state</id>
+        <type>hidden</type>
+        <grid_view><label>Rules</label><visible>true</visible><formatter>syncState</formatter></grid_view>
+    </field>
+    <field>
+        <id>group.max_states</id>
+        <label>Maximum open connections</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Advanced protection. Zero means no separate limit for this group.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.max_tcp_connections</id>
+        <label>Maximum TCP connections</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Advanced protection. Zero means no separate TCP limit.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.connection_rate</id>
+        <label>New TCP connections</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Maximum number of new TCP connections during the interval below. Zero disables this limit.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.connection_rate_seconds</id>
+        <label>TCP interval, seconds</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Time window for the new TCP connection limit.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.packet_rate</id>
+        <label>Packets per interval</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Maximum number of packets during the interval below. Zero disables this limit.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+    <field>
+        <id>group.packet_rate_seconds</id>
+        <label>Packet interval, seconds</label>
+        <type>text</type>
+        <advanced>true</advanced>
+        <help>Time window for the packet limit.</help>
+        <grid_view><visible>false</visible></grid_view>
+    </field>
+</form>

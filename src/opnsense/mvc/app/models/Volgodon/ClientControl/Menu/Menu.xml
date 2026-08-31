@@ -1,0 +1,5 @@
+<menu>
+    <Firewall>
+        <Clients order="90" VisibleName="Clients" url="/ui/clientcontrol/" cssClass="fa fa-users fa-fw"/>
+    </Firewall>
+</menu>

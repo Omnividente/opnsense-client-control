@@ -1,0 +1,1922 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: os-client-control 1.0\n"
+"Report-Msgid-Bugs-To: admin@volgodon.ru\n"
+"POT-Creation-Date: 2026-08-21 00:00+0300\n"
+"PO-Revision-Date: 2026-08-21 00:00+0300\n"
+"Last-Translator: VOLGODON <admin@volgodon.ru>\n"
+"Language-Team: Russian\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "A client with this name already exists."
+msgstr "Клиент с таким именем уже существует."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "A desired shaper pipe target is missing."
+msgstr "Не найден целевой канал Traffic Shaper."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "A destination alias is required for custom destination scope."
+msgstr "Для пользовательской области назначения требуется псевдоним назначения."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "A group with this name already exists."
+msgstr "Группа с таким именем уже существует."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "A limited client override requires non-zero download and upload rates."
+msgstr "Для ограниченного переопределения клиента задайте ненулевые скорости загрузки и отдачи."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "A selected client no longer exists."
+msgstr "Выбранный клиент больше не существует."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "A unique human-readable client name."
+msgstr "Уникальное понятное имя клиента."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Access"
+msgstr "Доступ"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Access override"
+msgstr "Переопределение доступа"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Action"
+msgstr "Действие"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Add"
+msgstr "Добавить"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Add Favorite"
+msgstr "Добавить в избранное"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Add and enable"
+msgstr "Добавить и включить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Add client"
+msgstr "Добавить клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Add endpoint"
+msgstr "Добавить адрес"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Add group"
+msgstr "Добавить группу"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Added client %s {%s}."
+msgstr "Добавлен клиент %s {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Added endpoint {%s} to client {%s}."
+msgstr "Добавлен адрес {%s} клиенту {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Added group %s {%s}."
+msgstr "Добавлена группа %s {%s}."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Address"
+msgstr "Адрес"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "After"
+msgstr "После"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Alias"
+msgstr "Псевдоним"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Alias %s belongs to more than one selected policy group (%s, %s)."
+msgstr "Псевдоним %s относится более чем к одной выбранной группе политик (%s, %s)."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Alias %s contains no importable IP or MAC endpoints."
+msgstr "Псевдоним %s не содержит IP- или MAC-адресов, пригодных для импорта."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Alias %s does not exist or is not importable."
+msgstr "Псевдоним %s не существует или непригоден для импорта."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Alias %s item %s is not an IP or MAC endpoint and will be skipped."
+msgstr "Псевдоним %s: элемент %s не является IP- или MAC-адресом и будет пропущен."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Alias cycle detected at %s."
+msgstr "Обнаружен цикл псевдонимов в %s."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Alias group"
+msgstr "Группа псевдонимов"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "Alias import"
+msgstr "Импорт псевдонимов"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Alias reload failed"
+msgstr "Не удалось перезагрузить псевдонимы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Aliases imported into Client Control. Source aliases were not modified."
+msgstr "Псевдонимы импортированы в модуль «Управление клиентами». Исходные псевдонимы не изменены."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "All"
+msgstr "Все"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "All access policies"
+msgstr "Все политики доступа"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "All groups"
+msgstr "Все группы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "All sync states"
+msgstr "Все состояния синхронизации"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Allow"
+msgstr "Разрешить"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "An enabled client requires at least one endpoint."
+msgstr "Для включённого клиента нужен хотя бы один IP- или MAC-адрес."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "An endpoint changed or belongs to another client."
+msgstr "Адрес изменился или принадлежит другому клиенту."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "An obsolete managed object was changed externally before deletion."
+msgstr "Устаревший управляемый объект был изменён извне перед удалением."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "An obsolete registered object lost its ownership markers and will not be deleted."
+msgstr "Устаревший зарегистрированный объект утратил маркеры принадлежности и не будет удалён."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "An unmanaged object occupies the deterministic name or recorded UUID."
+msgstr "Заданное имя или сохранённый UUID уже занят неуправляемым объектом."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/DiagnosticsController.php
+msgid "An unresolved MAC alias is empty; default block denies its traffic."
+msgstr "Псевдоним неразрешённого MAC-адреса пуст; правило блокировки по умолчанию запрещает его трафик."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "An unresolved or stale MAC endpoint is treated as offline and denied by the default block rule."
+msgstr "Неразрешённый или устаревший MAC-адрес считается недоступным и блокируется правилом по умолчанию."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Any destination"
+msgstr "Все адреса"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Applied"
+msgstr "Применено"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Applied revision"
+msgstr "Применённая ревизия"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Applied revision %d: %s"
+msgstr "Применена редакция %d: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply"
+msgstr "Применить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply Client Control plan"
+msgstr "Применить план управления клиентами"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Apply client policy to any, WAN/non-private, or an existing destination alias."
+msgstr "Применять политику клиента ко всем адресам назначения, к WAN и адресам вне частных сетей либо к существующему псевдониму назначения."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply exact plan"
+msgstr "Применить точный план"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Apply failed and was rolled back: %s"
+msgstr "Не удалось применить изменения; выполнен откат: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply is bound to the exact displayed fingerprint and current configuration revision. Any intervening change invalidates it."
+msgstr "Применение привязано к точному отображаемому отпечатку и текущей редакции конфигурации. Любое промежуточное изменение делает его недействительным."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply plan"
+msgstr "Применить план"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Apply the exact displayed diff?"
+msgstr "Применить точно эти отображаемые различия?"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Audit"
+msgstr "Журнал"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Back"
+msgstr "Назад"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Before"
+msgstr "До"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Block"
+msgstr "Блокировать"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Build a plan to see changes."
+msgstr "Сформируйте план, чтобы увидеть изменения."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Build and review a plan first."
+msgstr "Сначала сформируйте и проверьте план."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Build plan"
+msgstr "Сформировать план"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Cancel"
+msgstr "Отмена"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Category"
+msgstr "Категория"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Clear All"
+msgstr "Очистить все"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Click to expand/collapse cell"
+msgstr "Развернуть или свернуть ячейку"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Client"
+msgstr "Клиент"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Client %s already exists in Client Control."
+msgstr "Клиент %s уже существует в модуле «Управление клиентами»."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/GroupsController.php src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "Client Control"
+msgstr "Управление клиентами"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "Client Control compatibility error"
+msgstr "Ошибка совместимости модуля «Управление клиентами»"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Client Control runtime firewall guards failed verification."
+msgstr "Проверка защитных правил межсетевого экрана модуля «Управление клиентами» не пройдена."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Client Control schedule state synchronization failed."
+msgstr "Не удалось синхронизировать состояние расписаний модуля «Управление клиентами»."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "Client Control validation failed"
+msgstr "Ошибка проверки модуля «Управление клиентами»"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ACL/ACL.xml
+msgid "Client Control: Manage"
+msgstr "Управление клиентами: изменение"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ACL/ACL.xml
+msgid "Client Control: View"
+msgstr "Управление клиентами: просмотр"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Client access and bandwidth management"
+msgstr "Управление доступом клиентов и ограничением скорости"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Client endpoints"
+msgstr "Адреса клиентов"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+msgid "Client refers to a missing group."
+msgstr "Клиент ссылается на отсутствующую группу."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "ClientControl firewall category is missing."
+msgstr "Отсутствует категория межсетевого экрана ClientControl."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/Menu/Menu.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Clients"
+msgstr "Клиенты"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Clone"
+msgstr "Клонировать"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Close"
+msgstr "Закрыть"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Commands"
+msgstr "Действия"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Comment"
+msgstr "Комментарий"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Configuration restore returned false."
+msgstr "Не удалось восстановить конфигурацию."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Configuration saved but not applied. Review the plan."
+msgstr "Конфигурация сохранена, но не применена. Проверьте план."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Confirm the exact current diff before enabling enforcement."
+msgstr "Подтвердите точные текущие различия перед включением принудительного применения."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Conflict"
+msgstr "Конфликт"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Connection rate"
+msgstr "Частота соединений"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Connection rate and interval must be configured together."
+msgstr "Частоту соединений и интервал необходимо настроить вместе."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Connection rate interval"
+msgstr "Интервал частоты соединений"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Copied client %s {%s} to disabled client {%s} without endpoints."
+msgstr "Клиент %s {%s} скопирован в отключённого клиента {%s} без адресов."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Copied group %s {%s} to {%s}."
+msgstr "Группа %s {%s} скопирована в {%s}."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Copy"
+msgstr "Копировать"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Copy client"
+msgstr "Копировать клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Copy client policy"
+msgstr "Копировать политику клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Copy group"
+msgstr "Копировать группу"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Copy policy without endpoints"
+msgstr "Копировать политику без адресов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Create"
+msgstr "Создать"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Create a disabled copy without identity endpoints?"
+msgstr "Создать отключённую копию без идентифицирующих адресов?"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+msgid "Created"
+msgstr "Создано"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Creates one active client and its first unique endpoint atomically. Edit the row to add overrides; use Client endpoints for additional addresses."
+msgstr "Атомарно создаёт активного клиента и его первый уникальный адрес. Переопределения задаются при изменении строки; дополнительные адреса — в разделе «Адреса клиентов»."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Custom alias"
+msgstr "Адреса из псевдонима"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Delete"
+msgstr "Удалить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Delete clients"
+msgstr "Удалить клиентов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Delete endpoint"
+msgstr "Удалить адрес"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Delete group"
+msgstr "Удалить группу"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Delete selected"
+msgstr "Удалить выбранные"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+msgid "Deleted"
+msgstr "Удалено"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Deleted clients: %d."
+msgstr "Удалено клиентов: %d."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Deleted endpoint {%s}."
+msgstr "Удалён адрес {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Deleted group %s {%s}; moved clients: %d."
+msgstr "Удалена группа %s {%s}; перемещено клиентов: %d."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Deny unresolved MAC endpoints"
+msgstr "Блокировать неразрешённые MAC-адреса"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Description"
+msgstr "Описание"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Destination alias"
+msgstr "Псевдоним назначения"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Destination scope"
+msgstr "Область назначения"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Diagnostics"
+msgstr "Диагностика"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Disable"
+msgstr "Отключить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Disable selected"
+msgstr "Отключить выбранные"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Disabled client %s {%s}."
+msgstr "Отключён клиент %s {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Disabled clients: %d."
+msgstr "Отключено клиентов: %d."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Disabled group %s {%s}."
+msgstr "Отключена группа %s {%s}."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Download"
+msgstr "Скорость загрузки"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Download override"
+msgstr "Переопределение скорости загрузки"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Edit"
+msgstr "Изменить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Edit client"
+msgstr "Изменить клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Edit client endpoint"
+msgstr "Изменить адрес клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Edit policy group"
+msgstr "Изменить группу политик"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Effective access"
+msgstr "Итоговый доступ"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Enable"
+msgstr "Включить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Enable or disable client"
+msgstr "Включить или отключить клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Enable or disable clients"
+msgstr "Включить или отключить клиентов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Enable or disable group"
+msgstr "Включить или отключить группу"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Enable selected"
+msgstr "Включить выбранные"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Enabled"
+msgstr "Включено"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Enabled client %s {%s}."
+msgstr "Включён клиент %s {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Enabled clients: %d."
+msgstr "Включено клиентов: %d."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Enabled group %s {%s}."
+msgstr "Включена группа %s {%s}."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/GroupsController.php
+msgid "Enabled must be 0 or 1."
+msgstr "Значение «Включено» должно быть 0 или 1."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Endpoint %s occurs in both %s and %s."
+msgstr "Адрес %s встречается и в %s, и в %s."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Endpoint kind"
+msgstr "Тип адреса"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "Endpoints must be a list."
+msgstr "Адреса должны быть списком."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Enforce"
+msgstr "Применять правила"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/models/Volgodon/ClientControl/FieldTypes/EndpointValueField.php
+msgid "Enter a valid address matching the selected endpoint type."
+msgstr "Введите корректный адрес выбранного типа."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Enter one exact IPv4, IPv6, or MAC address."
+msgstr "Введите один точный адрес IPv4, IPv6 или MAC."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Error"
+msgstr "Ошибка"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "Every endpoint must be an object."
+msgstr "Каждый адрес должен быть объектом."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Fail on external changes"
+msgstr "Завершать с ошибкой при внешних изменениях"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Filter rule"
+msgstr "Правило фильтра"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Filters"
+msgstr "Фильтры"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Fingerprint"
+msgstr "Отпечаток"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Firewall rule"
+msgstr "Правило межсетевого экрана"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "First"
+msgstr "Первая"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "First page"
+msgstr "Первая страница"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Gbit/s"
+msgstr "Гбит/с"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "General"
+msgstr "Основные"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Group"
+msgstr "Группа"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Group alias %s references unsupported item %s."
+msgstr "Псевдоним группы %s ссылается на неподдерживаемый элемент %s."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Groups"
+msgstr "Группы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Host alias"
+msgstr "Псевдоним хоста"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "IP / MAC"
+msgstr "IP / MAC"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "IP or MAC"
+msgstr "IP или MAC"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+#, php-format
+msgid "IPFW flush failed: %s"
+msgstr "Сбой очистки IPFW: %s"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+#, php-format
+msgid "IPFW reload failed: %s"
+msgstr "Сбой перезагрузки IPFW: %s"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "IPv4"
+msgstr "IPv4"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "IPv4, IPv6, or MAC address."
+msgstr "Адрес IPv4, IPv6 или MAC."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "IPv6"
+msgstr "IPv6"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Import aliases"
+msgstr "Импорт псевдонимов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Import reads existing aliases and creates Client Control groups, clients, and endpoints. It never edits or deletes source aliases."
+msgstr "Импорт читает существующие псевдонимы и создаёт в модуле «Управление клиентами» группы, клиентов и адреса. Исходные псевдонимы не изменяются и не удаляются."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Import selected"
+msgstr "Импортировать выбранные"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Imported from alias %s"
+msgstr "Импортировано из псевдонима %s"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "Imported standalone aliases"
+msgstr "Импортированные отдельные псевдонимы"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Imported without changing source aliases: groups=%d, clients=%d, endpoints=%d."
+msgstr "Импортировано без изменения исходных псевдонимов: групп=%d, клиентов=%d, адресов=%d."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "In sync"
+msgstr "Правила актуальны"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Info"
+msgstr "Сведения"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Inherit"
+msgstr "Как в группе"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Interfaces where client traffic enters OPNsense."
+msgstr "Интерфейсы, через которые клиентский трафик поступает в OPNsense."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Invalid"
+msgstr "Недопустимо"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "Invalid client identifier."
+msgstr "Недопустимый идентификатор клиента."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Kbit/s"
+msgstr "Кбит/с"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Label"
+msgstr "Метка"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Last"
+msgstr "Последняя"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Last page"
+msgstr "Последняя страница"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Limited"
+msgstr "Свой лимит"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Limited groups require non-zero download and upload rates."
+msgstr "Для ограниченных групп задайте ненулевые скорости загрузки и отдачи."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "MAC"
+msgstr "MAC"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "MAC alias"
+msgstr "Псевдоним MAC"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/DiagnosticsController.php
+msgid "MAC endpoint is absent from ARP/NDP and is denied as unknown."
+msgstr "MAC-адрес отсутствует в ARP/NDP и блокируется как неизвестный."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+#, php-format
+msgid "Managed object %s was not present after reconciliation."
+msgstr "Управляемый объект %s отсутствовал после согласования."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Managed objects"
+msgstr "Управляемые объекты"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "Managed objects contain conflicts. Resolve them or explicitly restore module state."
+msgstr "Управляемые объекты содержат конфликты. Разрешите их или явно восстановите состояние модуля."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Max TCP connections"
+msgstr "Максимум TCP-соединений"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Max states"
+msgstr "Максимум состояний"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Maximize grid"
+msgstr "Развернуть таблицу"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Mbit/s"
+msgstr "Мбит/с"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Members"
+msgstr "Клиенты"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Minimize grid"
+msgstr "Свернуть таблицу"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Mode"
+msgstr "Режим"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Move clients"
+msgstr "Переместить клиентов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Move selected"
+msgstr "Переместить выбранных"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Moved clients: %d; target group {%s}."
+msgstr "Перемещено клиентов: %d; целевая группа {%s}."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Name"
+msgstr "Имя"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Name, group, and IP/MAC are required."
+msgstr "Обязательны имя, группа и IP/MAC."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Neighbors"
+msgstr "Соседи"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Network alias"
+msgstr "Псевдоним сети"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Never applied"
+msgstr "Ещё не применено"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "New clients start disabled. Add at least one unique IPv4, IPv6, or MAC endpoint, then enable the client."
+msgstr "Новые клиенты изначально отключены. Добавьте хотя бы один уникальный IPv4-, IPv6- или MAC-адрес, затем включите клиента."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Next"
+msgstr "Следующая"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Next page"
+msgstr "Следующая страница"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "No Traffic Shaper pipe numbers are available."
+msgstr "Нет доступных номеров каналов Traffic Shaper."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "No changes"
+msgstr "Без изменений"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "No changes."
+msgstr "Нет изменений."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "No contiguous rule sequence range is available."
+msgstr "Нет доступного непрерывного диапазона номеров правил."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "No results found"
+msgstr "Ничего не найдено"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Nothing selected"
+msgstr "Ничего не выбрано"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "OK"
+msgstr "ОК"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Object"
+msgstr "Объект"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Observe"
+msgstr "Только проверка"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Observe compiles a preview but does not create firewall or shaper enforcement objects."
+msgstr "Режим «Наблюдение» формирует предварительный план, но не создаёт правила межсетевого экрана и Traffic Shaper."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Offline"
+msgstr "Не в сети"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "One or two egress interfaces used by generated Traffic Shaper rules."
+msgstr "Один или два исходящих интерфейса, используемых создаваемыми правилами Traffic Shaper."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Online"
+msgstr "В сети"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Only this tab can change firewall, alias, and traffic-shaper core objects."
+msgstr "Только на этой вкладке можно изменять объекты межсетевого экрана, псевдонимов и Traffic Shaper."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Operation"
+msgstr "Операция"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Optional existing firewall schedule."
+msgstr "Необязательное существующее расписание межсетевого экрана."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Optional operator-facing label."
+msgstr "Необязательная понятная метка адреса."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Override unit"
+msgstr "Единица переопределения"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "PF states"
+msgstr "Состояния PF"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Packet rate"
+msgstr "Частота пакетов"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Packet rate and interval must be configured together."
+msgstr "Скорость пакетов и интервал должны быть настроены вместе."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Packet-rate limiting is not supported by this firewall runtime."
+msgstr "Ограничение частоты пакетов не поддерживается этой версией межсетевого экрана."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Packet rate interval"
+msgstr "Интервал частоты пакетов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Page size"
+msgstr "Размер страницы"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Paste"
+msgstr "Вставить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Pending"
+msgstr "Нужно применить"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Per client"
+msgstr "Отдельно для каждого"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Pipe"
+msgstr "Канал"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Plan / Apply"
+msgstr "План и применение"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Plan applied and verified. Runtime reload completed."
+msgstr "План применён и проверен. Перезагрузка рабочей конфигурации завершена."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Please wait..."
+msgstr "Подождите..."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Post-apply verification found a non-idempotent managed state."
+msgstr "Проверка после применения выявила неидемпотентное управляемое состояние."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Presence"
+msgstr "Доступность"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Preview import"
+msgstr "Предпросмотр импорта"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Previous"
+msgstr "Предыдущая"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Previous page"
+msgstr "Предыдущая страница"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Processing request..."
+msgstr "Выполняется запрос..."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Protected client interfaces"
+msgstr "Защищаемые интерфейсы клиентов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Raw plan"
+msgstr "План в формате JSON"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Raw runtime data"
+msgstr "Рабочие данные в формате JSON"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Refresh"
+msgstr "Обновить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Refresh audit"
+msgstr "Обновить журнал"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Refresh diagnostics"
+msgstr "Обновить диагностику"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+msgid "Registry entries removed"
+msgstr "Удалено записей реестра"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Related client identifier is invalid."
+msgstr "Некорректный идентификатор связанного клиента."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Related group identifier is invalid."
+msgstr "Некорректный идентификатор связанной группы."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Remove Favorite"
+msgstr "Удалить из избранного"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Remove registry entry"
+msgstr "Удалить запись реестра"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Remove selected item(s)?"
+msgstr "Удалить выбранные элементы?"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Request failed."
+msgstr "Запрос завершился ошибкой."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Required only for custom destination scope."
+msgstr "Требуется только для пользовательской области назначения."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Reset grid layout"
+msgstr "Сбросить расположение таблицы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Restore desired state"
+msgstr "Восстановить заданное состояние"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Result"
+msgstr "Результат"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Revision"
+msgstr "Ревизия"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Roll back failed apply"
+msgstr "Откат после ошибки применения"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Safe default: disabled and observe-only."
+msgstr "Безопасное значение по умолчанию: отключено, только наблюдение."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Save"
+msgstr "Сохранить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Save settings"
+msgstr "Сохранить настройки"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Saving edits never reloads the firewall. Use Plan / Apply to review the exact core objects first."
+msgstr "Сохранение изменений не перезагружает межсетевой экран. Сначала откройте «План и применение» и проверьте точный набор объектов OPNsense."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Scan aliases"
+msgstr "Сканировать псевдонимы"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Schedule"
+msgstr "Расписание"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Search"
+msgstr "Поиск"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Search columns"
+msgstr "Поиск по столбцам"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Select All"
+msgstr "Выбрать все"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/GroupsController.php
+msgid "Select another existing group for all current members before deletion."
+msgstr "Перед удалением выберите другую существующую группу для всех её клиентов."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Select at least one WAN interface when shaping is enabled."
+msgstr "При включённом ограничении скорости выберите хотя бы один интерфейс WAN."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Select at least one client."
+msgstr "Выберите хотя бы одного клиента."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "Select at least one importable alias."
+msgstr "Выберите хотя бы один импортируемый псевдоним."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Select at least one protected client interface."
+msgstr "Выберите хотя бы один защищённый клиентский интерфейс."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Select row"
+msgstr "Выбрать строку"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogEndpoint.xml
+msgid "Select the client that owns this endpoint."
+msgstr "Выберите клиента, которому принадлежит этот адрес."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "Shaper rule"
+msgstr "Правило Traffic Shaper"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Shaping"
+msgstr "Ограничение скорости"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Shaping override"
+msgstr "Переопределение скорости"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Shared"
+msgstr "Общий на группу"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Show page"
+msgstr "Показать страницу"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Show system status"
+msgstr "Показать состояние системы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Showing"
+msgstr "Показано"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+#, php-format
+msgid "Showing %s to %s"
+msgstr "Показаны записи с %s по %s"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+#, php-format
+msgid "Showing %s to %s of %s entries"
+msgstr "Показаны записи с %s по %s из %s"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "States"
+msgstr "Состояния"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Status"
+msgstr "Статус"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Success"
+msgstr "Успешно"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Summary"
+msgstr "Сводка"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Sync"
+msgstr "Синхронизация"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "System"
+msgstr "Система"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Text"
+msgstr "Текст"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
+#, php-format
+msgid "The %s payload must be an object or list."
+msgstr "Данные «%s» должны быть объектом или списком."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "The aliases or import selection changed. Review the current preview."
+msgstr "Псевдонимы или выбор для импорта изменились. Проверьте текущий предпросмотр."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "The apply plan changed. Review the current diff before applying."
+msgstr "План применения изменился. Проверьте текущие различия перед применением."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "The client no longer exists."
+msgstr "Клиент больше не существует."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
+msgid "The configuration changed after this page was loaded. Reload and retry."
+msgstr "Конфигурация изменилась после загрузки этой страницы. Перезагрузите страницу и повторите попытку."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "The current plan contains managed-object conflicts."
+msgstr "Текущий план содержит конфликты управляемых объектов."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "The deterministic managed object name was changed externally."
+msgstr "Детерминированное имя управляемого объекта было изменено извне."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "The endpoint no longer exists."
+msgstr "Адрес больше не существует."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "The endpoint owner client does not exist."
+msgstr "Клиент — владелец адреса не существует."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "The group must exist, and an enabled client requires one."
+msgstr "Группа должна существовать; для включённого клиента она обязательна."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/GroupsController.php
+msgid "The group no longer exists."
+msgstr "Группа больше не существует."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+#, php-format
+msgid "The installed OPNsense version does not support firewall field %s."
+msgstr "Установленная версия OPNsense не поддерживает поле межсетевого экрана %s."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "The managed object differs from its last applied fingerprint."
+msgstr "Управляемый объект отличается от своего последнего применённого отпечатка."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "The module is disabled by default. Saving does not change runtime firewall state."
+msgstr "Модуль по умолчанию отключён. Сохранение не изменяет текущее состояние межсетевого экрана."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "The previously applied managed object is missing."
+msgstr "Ранее применённый управляемый объект отсутствует."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "The selected client no longer exists."
+msgstr "Выбранный клиент больше не существует."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "The target group does not exist."
+msgstr "Целевая группа не существует."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "This endpoint is already assigned to another client."
+msgstr "Этот адрес уже назначен другому клиенту."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
+msgid "This operation requires POST."
+msgstr "Для этой операции требуется POST."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "This will enforce the exact displayed diff and may interrupt client traffic. Continue?"
+msgstr "Будут применены в точности показанные различия, что может прервать клиентский трафик. Продолжить?"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Time"
+msgstr "Время"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Toggle navigation"
+msgstr "Показать или скрыть навигацию"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "Toggle sidebar"
+msgstr "Показать или скрыть боковую панель"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Traffic Shaper pipe"
+msgstr "Канал Traffic Shaper"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+#, php-format
+msgid "Traffic Shaper reload failed: %s"
+msgstr "Не удалось перезагрузить Traffic Shaper: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Traffic Shaper rule"
+msgstr "Правило Traffic Shaper"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.php
+msgid "Traffic Shaper rules support at most two WAN interfaces."
+msgstr "Правила Traffic Shaper поддерживают не более двух интерфейсов WAN."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Type"
+msgstr "Тип"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Reconciler.php
+msgid "Unable to resolve a desired shaper pipe."
+msgstr "Не удалось определить требуемый канал Traffic Shaper."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "Unable to resolve an imported client group."
+msgstr "Не удалось определить импортированную группу клиентов."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Unique policy group name."
+msgstr "Уникальное имя группы политик."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Unit"
+msgstr "Единица"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Unknown"
+msgstr "Неизвестно"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Planner.php
+msgid "Unknown conflict strategy."
+msgstr "Неизвестная стратегия разрешения конфликтов."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+msgid "Unknown endpoint kind."
+msgstr "Неизвестный тип адреса."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+msgid "Unknown enforcement or destination mode."
+msgstr "Неизвестный режим принудительного применения или назначения."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Unlimited"
+msgstr "Без ограничения скорости"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "Unresolved MAC policy"
+msgstr "Политика для неизвестных MAC-адресов"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Update"
+msgstr "Обновить"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Update client"
+msgstr "Обновить клиента"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Update endpoint"
+msgstr "Обновить адрес"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Update group"
+msgstr "Обновить группу"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Update module settings"
+msgstr "Обновить настройки модуля"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+msgid "Updated"
+msgstr "Обновлено"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Updated client %s {%s}."
+msgstr "Обновлён клиент %s {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Updated endpoint {%s}."
+msgstr "Обновлён адрес {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+#, php-format
+msgid "Updated group %s {%s}."
+msgstr "Обновлена группа %s {%s}."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php
+msgid "Updated module settings."
+msgstr "Настройки модуля обновлены."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogGroup.xml
+msgid "Upload"
+msgstr "Скорость отдачи"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/dialogClient.xml
+msgid "Upload override"
+msgstr "Переопределение скорости отдачи"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "User"
+msgstr "Пользователь"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml
+msgid "WAN / non-private destinations"
+msgstr "Только интернет"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml
+msgid "WAN interfaces"
+msgstr "Интерфейсы WAN"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "advanced mode"
+msgstr "расширенный режим"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/PluginViewTranslator.php
+msgid "full help"
+msgstr "вся справка"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "of"
+msgstr "из"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "pages"
+msgstr "страницы"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "rows"
+msgstr "строки"
+
+#: Human-facing interface wording
+msgid "A client identified only by MAC is treated as offline and blocked while OPNsense cannot find its current IP address."
+msgstr "Клиент, указанный только по MAC, считается не в сети и блокируется, пока OPNsense не определит его текущий IP-адрес."
+
+msgid "A group gives several clients the same access and speed settings. Individual exceptions can be set in a client card."
+msgstr "Группа задаёт одинаковый доступ и скорость для нескольких клиентов. Исключения можно указать в карточке клиента."
+
+msgid "Access for this client"
+msgstr "Доступ для этого клиента"
+
+msgid "Active"
+msgstr "Действует"
+
+msgid "Add address"
+msgstr "Добавить адрес"
+
+msgid "Add another IP or MAC when the same client uses several network interfaces or addresses."
+msgstr "Добавьте ещё один IP- или MAC-адрес, если клиент использует несколько сетевых интерфейсов или адресов."
+
+msgid "Additional client addresses"
+msgstr "Дополнительные адреса клиента"
+
+msgid "Address type"
+msgstr "Тип адреса"
+
+msgid "Addresses"
+msgstr "Адреса"
+
+msgid "Advanced protection. Zero means no separate TCP limit."
+msgstr "Дополнительная защита. Ноль означает, что отдельного ограничения TCP нет."
+
+msgid "Advanced protection. Zero means no separate limit for this group."
+msgstr "Дополнительная защита. Ноль означает, что отдельного ограничения для группы нет."
+
+msgid "Aliases, firewall rules, and speed-limit objects created by Client Control."
+msgstr "Псевдонимы, правила межсетевого экрана и ограничения скорости, созданные модулем."
+
+msgid "Allow lets enabled clients use the selected destinations. Block denies that traffic."
+msgstr "«Разрешить» открывает выбранные адреса включённым клиентам. «Блокировать» запрещает этот трафик."
+
+msgid "Any access"
+msgstr "Любой доступ"
+
+msgid "Any group"
+msgstr "Любая группа"
+
+msgid "Any rule state"
+msgstr "Любое состояние правил"
+
+msgid "Applied version"
+msgstr "Применённая версия"
+
+msgid "Apply changes"
+msgstr "Применить изменения"
+
+msgid "Apply rules to"
+msgstr "Куда применять правила"
+
+msgid "Apply the changes shown below?"
+msgstr "Применить показанные ниже изменения?"
+
+msgid "Change"
+msgstr "Изменение"
+
+msgid "Changed outside Client Control"
+msgstr "Изменено вне модуля"
+
+msgid "Changes applied. OPNsense rules were reloaded and checked."
+msgstr "Изменения применены. Правила OPNsense перезагружены и проверены."
+
+msgid "Changes not applied"
+msgstr "Есть неприменённые изменения"
+
+msgid "Changes saved. Check and apply them when ready."
+msgstr "Изменения сохранены. Проверьте и примените их, когда будете готовы."
+
+msgid "Check changes"
+msgstr "Проверить изменения"
+
+msgid "Check import"
+msgstr "Проверить импорт"
+
+msgid "Check the changes first."
+msgstr "Сначала проверьте изменения."
+
+msgid "Check the fields"
+msgstr "Проверьте поля"
+
+msgid "Check the settings"
+msgstr "Проверьте настройки"
+
+msgid "Choose IPv4, IPv6, or MAC."
+msgstr "Выберите IPv4, IPv6 или MAC."
+
+msgid "Choose a group"
+msgstr "Выберите группу"
+
+msgid "Choose no limit, a separate limit for every client, or one shared limit for the whole group."
+msgstr "Выберите работу без лимита, отдельный лимит для каждого клиента или один общий лимит на группу."
+
+msgid "Choose whether client rules cover all destinations, internet traffic only, or addresses from one existing alias."
+msgstr "Выберите: все адреса, только интернет или адреса из одного существующего псевдонима."
+
+msgid "Click “Check changes” to see what will happen."
+msgstr "Нажмите «Проверить изменения», чтобы увидеть результат заранее."
+
+msgid "Client address"
+msgstr "Адрес клиента"
+
+msgid "Client download limit"
+msgstr "Лимит загрузки клиента"
+
+msgid "Client enabled"
+msgstr "Клиент включён"
+
+msgid "Client name"
+msgstr "Имя клиента"
+
+msgid "Client networks"
+msgstr "Сети клиентов"
+
+msgid "Client settings"
+msgstr "Настройки клиента"
+
+msgid "Client speed unit"
+msgstr "Единица скорости клиента"
+
+msgid "Client upload limit"
+msgstr "Лимит отдачи клиента"
+
+msgid "Clients must be moved to another group so they do not lose their policy."
+msgstr "Перед удалением перенесите клиентов в другую группу, чтобы они не остались без правил."
+
+msgid "Copy client without addresses"
+msgstr "Копировать клиента без адресов"
+
+msgid "Create a copy without IP or MAC addresses? The copy will stay disabled."
+msgstr "Создать копию без IP- и MAC-адресов? Копия останется отключённой."
+
+msgid "Current status"
+msgstr "Текущее состояние"
+
+msgid "Current value"
+msgstr "Сейчас"
+
+msgid "Date and time"
+msgstr "Дата и время"
+
+msgid "Delete a group that still has clients"
+msgstr "Удаление группы с клиентами"
+
+msgid "Delete address"
+msgstr "Удалить адрес"
+
+msgid "Details"
+msgstr "Подробности"
+
+msgid "Device note"
+msgstr "Подпись устройства"
+
+msgid "Disabled clients remain in the list but do not receive access through this module."
+msgstr "Отключённый клиент остаётся в списке, но модуль не предоставляет ему доступ."
+
+msgid "Disabled groups do not grant access and do not create speed limits."
+msgstr "Отключённая группа не предоставляет доступ и не создаёт ограничения скорости."
+
+msgid "Download limit"
+msgstr "Лимит загрузки"
+
+msgid "Enable Client Control"
+msgstr "Включить управление клиентами"
+
+msgid "Enter a client name, choose a group, and provide an IP or MAC address."
+msgstr "Укажите имя клиента, выберите группу и введите IP- или MAC-адрес."
+
+msgid "Enter one full IP or MAC address. The same address cannot belong to two enabled clients."
+msgstr "Введите один полный IP- или MAC-адрес. Один адрес нельзя назначить двум включённым клиентам."
+
+msgid "Fill this only when “Selected alias” is chosen above."
+msgstr "Заполняйте только при выборе варианта «Адреса из псевдонима»."
+
+msgid "Find aliases"
+msgstr "Найти псевдонимы"
+
+msgid "Group enabled"
+msgstr "Группа включена"
+
+msgid "Group name"
+msgstr "Название группы"
+
+msgid "Group settings"
+msgstr "Настройки группы"
+
+msgid "Group to delete"
+msgstr "Удаляемая группа"
+
+msgid "History"
+msgstr "История"
+
+msgid "IP or MAC address"
+msgstr "IP- или MAC-адрес"
+
+msgid "If OPNsense rules were changed outside Client Control, stop and review the difference before replacing anything."
+msgstr "Если правила OPNsense меняли вне модуля, сначала остановитесь и проверьте различия."
+
+msgid "Import"
+msgstr "Импорт"
+
+msgid "Internet access"
+msgstr "Доступ в интернет"
+
+msgid "Internet interfaces"
+msgstr "Интернет-интерфейсы"
+
+msgid "Keep the group setting unless this client needs a separate access rule."
+msgstr "Оставьте настройку группы, если этому клиенту не нужно отдельное правило доступа."
+
+msgid "Keep the group setting, remove the limit, or set a separate limit for this client."
+msgstr "Используйте настройку группы, снимите ограничение или задайте клиенту свой лимит."
+
+msgid "Known addresses"
+msgstr "Известные адреса"
+
+msgid "Maximum TCP connections"
+msgstr "Максимум TCP-соединений"
+
+msgid "Maximum number of new TCP connections during the interval below. Zero disables this limit."
+msgstr "Максимум новых TCP-соединений за указанный ниже интервал. Ноль отключает ограничение."
+
+msgid "Maximum number of packets during the interval below. Zero disables this limit."
+msgstr "Максимум пакетов за указанный ниже интервал. Ноль отключает ограничение."
+
+msgid "Maximum open connections"
+msgstr "Максимум открытых соединений"
+
+msgid "Maximum speed from clients in this group to the internet."
+msgstr "Максимальная скорость от клиентов этой группы в интернет."
+
+msgid "Maximum speed from the internet to clients in this group."
+msgstr "Максимальная скорость из интернета к клиентам этой группы."
+
+msgid "Move clients and delete group"
+msgstr "Перенести клиентов и удалить группу"
+
+msgid "Move its clients to"
+msgstr "Куда перенести клиентов"
+
+msgid "Move selected to group"
+msgstr "Перенести выбранных в группу"
+
+msgid "Move to group"
+msgstr "Группа назначения"
+
+msgid "Needs attention"
+msgstr "Требует внимания"
+
+msgid "Network"
+msgstr "Сеть"
+
+msgid "New TCP connections"
+msgstr "Новые TCP-соединения"
+
+msgid "New value"
+msgstr "Будет"
+
+msgid "No problems found. You can import the selected aliases."
+msgstr "Проблем не найдено. Выбранные псевдонимы можно импортировать."
+
+msgid "No suitable aliases found."
+msgstr "Подходящие псевдонимы не найдены."
+
+msgid "Not applied yet"
+msgstr "Ещё не применено"
+
+msgid "Note"
+msgstr "Примечание"
+
+msgid "OPNsense objects"
+msgstr "Объекты OPNsense"
+
+msgid "Open connections"
+msgstr "Открытые соединения"
+
+msgid "Optional OPNsense firewall schedule. Leave empty when the group must work all the time."
+msgstr "Необязательное расписание OPNsense. Оставьте пустым, если группа должна работать постоянно."
+
+msgid "Optional note about who belongs to this group and why."
+msgstr "Необязательное пояснение: кто входит в группу и для чего она нужна."
+
+msgid "Optional note for administrators."
+msgstr "Необязательное примечание для администраторов."
+
+msgid "Optional note, for example “Laptop Wi-Fi” or “Work phone”."
+msgstr "Необязательная подпись, например «Ноутбук Wi-Fi» или «Рабочий телефон»."
+
+msgid "Outside changes"
+msgstr "Внешние изменения"
+
+msgid "Packet interval, seconds"
+msgstr "Интервал пакетов, секунд"
+
+msgid "Packets per interval"
+msgstr "Пакетов за интервал"
+
+msgid "Part"
+msgstr "Раздел"
+
+msgid "Preview only shows what would change. Apply rules allows the reviewed access and speed rules to become active."
+msgstr "«Только проверка» лишь показывает будущие изменения. «Применять правила» разрешает включить проверенные правила доступа и скорости."
+
+msgid "Problems"
+msgstr "Проблемы"
+
+msgid "Ready"
+msgstr "Можно применять"
+
+msgid "Replace outside changes with these settings"
+msgstr "Заменить внешние изменения этими настройками"
+
+msgid "Review and apply"
+msgstr "Проверка и применение"
+
+msgid "Rules"
+msgstr "Правила"
+
+msgid "Rules match settings"
+msgstr "Правила соответствуют настройкам"
+
+msgid "Save changes"
+msgstr "Сохранить изменения"
+
+msgid "Saved groups and clients stay in place when this is off. Traffic changes only after you review and apply them."
+msgstr "При отключении группы и клиенты сохраняются. Трафик изменится только после проверки и применения настроек."
+
+msgid "Saving settings does not change client traffic immediately."
+msgstr "Сохранение настроек не меняет трафик клиентов сразу."
+
+msgid "Select the client that uses this address."
+msgstr "Выберите клиента, которому принадлежит этот адрес."
+
+msgid "Select the interfaces that carry traffic to the internet. In a typical setup this is WAN."
+msgstr "Выберите интерфейсы, через которые идёт трафик в интернет. Обычно это WAN."
+
+msgid "Select the interfaces where client traffic enters the firewall. In a typical setup this is LAN."
+msgstr "Выберите интерфейсы, через которые трафик клиентов приходит на межсетевой экран. Обычно это LAN."
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Settings version"
+msgstr "Версия настроек"
+
+msgid "Show"
+msgstr "Показать"
+
+msgid "Speed for this client"
+msgstr "Скорость для этого клиента"
+
+msgid "Speed limit"
+msgstr "Ограничение скорости"
+
+msgid "Speed unit"
+msgstr "Единица скорости"
+
+msgid "Stop when outside changes are found"
+msgstr "Остановиться при внешних изменениях"
+
+msgid "TCP interval, seconds"
+msgstr "Интервал TCP, секунд"
+
+msgid "Technical import details"
+msgstr "Технические данные импорта"
+
+msgid "Technical plan details"
+msgstr "Технические данные плана"
+
+msgid "Technical status details"
+msgstr "Технические данные состояния"
+
+msgid "The client is enabled immediately with this first address. To add more addresses or make an exception to the group settings, open the client row."
+msgstr "Клиент сразу включается с первым адресом. Чтобы добавить адреса или изменить для него правила группы, откройте строку клиента."
+
+msgid "The client normally receives access and speed settings from this group."
+msgstr "Обычно клиент получает доступ и ограничения скорости из этой группы."
+
+msgid "The history records who changed the settings and when rules were applied or rolled back."
+msgstr "В истории видно, кто менял настройки и когда правила применялись или откатывались."
+
+msgid "These rules may immediately allow, block, or slow client traffic. Apply the changes?"
+msgstr "Эти правила могут сразу разрешить, заблокировать или замедлить трафик клиентов. Применить изменения?"
+
+msgid "This page shows whether clients are visible on the network and whether their rules match the saved settings."
+msgstr "Здесь видно, доступны ли клиенты в сети и соответствуют ли их правила сохранённым настройкам."
+
+msgid "Time window for the new TCP connection limit."
+msgstr "Период времени для ограничения новых TCP-соединений."
+
+msgid "Time window for the packet limit."
+msgstr "Период времени для ограничения числа пакетов."
+
+msgid "Traffic changes only after you apply the checked list below."
+msgstr "Трафик изменится только после применения проверенного списка ниже."
+
+msgid "Update address"
+msgstr "Изменить адрес"
+
+msgid "Upload limit"
+msgstr "Лимит отдачи"
+
+msgid "Use a name that identifies the person or device without checking its address."
+msgstr "Назовите клиента так, чтобы человека или устройство можно было узнать без проверки адреса."
+
+msgid "Use a name that is clear to an operator, for example “Office”, “Guests”, or “No internet”."
+msgstr "Используйте понятное название, например «Офис», «Гости» или «Без интернета»."
+
+msgid "Use this when clients already exist as OPNsense aliases. Import copies their names and addresses; the original aliases remain unchanged."
+msgstr "Используйте импорт, если клиенты уже заведены как псевдонимы OPNsense. Имена и адреса копируются, исходные псевдонимы не меняются."
+
+msgid "Used only when a separate speed limit is selected above."
+msgstr "Используется только при выборе отдельного ограничения скорости выше."
+
+msgid "Warnings"
+msgstr "Предупреждения"
+
+msgid "When the settings are ready, open “Review and apply”, check the list, and apply it."
+msgstr "Когда настройки готовы, откройте «Проверка и применение», проверьте список и примените его."
+
+msgid "Will be added"
+msgstr "Будет добавлено"
+
+msgid "Work mode"
+msgstr "Режим работы"
+
+msgid "Choose another group for these clients."
+msgstr "Выберите другую группу для этих клиентов."
+
+msgid "Clients will be moved to the chosen group. Delete the old group?"
+msgstr "Клиенты будут перенесены в выбранную группу. Удалить прежнюю группу?"
+
+msgid "Delete this empty group?"
+msgstr "Удалить эту пустую группу?"
+
+msgid "Last applied"
+msgstr "Последнее применение"
+
+msgid "None"
+msgstr "Без расписания"
+
+msgid "Settings are already active"
+msgstr "Настройки уже действуют"
