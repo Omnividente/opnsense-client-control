@@ -77,7 +77,9 @@ git ls-files -z -- '*.sh' '+*.pre' '+*.post' |
 
 "$ACTIONLINT" -color
 "$PYTHON" tools/workflow-policy.py --self-test
-"$PYTHON" tools/workflow-policy.py .github/workflows/*.yml
+# Deliberately omit xargs -r: an empty tracked set must invoke the policy and fail closed.
+git ls-files -z -- '.github/workflows/*.yml' '.github/workflows/*.yaml' |
+    xargs -0 "$PYTHON" tools/workflow-policy.py
 
 "$PYTHON" -m py_compile \
     tests/api-smoke.py \

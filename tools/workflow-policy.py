@@ -44,6 +44,8 @@ def workflow_violations(path: Path, text: str) -> list[str]:
         errors.append("repository workflows must not read configured secrets")
     if re.search(r"(?m)^\s*continue-on-error\s*:\s*true\s*$", text):
         errors.append("continue-on-error: true can hide a failed check")
+    if re.search(r"(?m)^[ \t]+permissions\s*:", text):
+        errors.append("job-level permissions are forbidden; declare them at the top level")
 
     for action in USES_RE.findall(text):
         if action.startswith("./") or PINNED_DOCKER_RE.fullmatch(action):
@@ -101,6 +103,9 @@ jobs:
         "self-hosted": safe.replace("ubuntu-24.04", "self-hosted"),
         "unpinned": safe.replace(f"actions/checkout@{pin}", "actions/checkout@v7"),
         "secret": safe + "      - run: echo '${{ secrets.TOKEN }}'\n",
+        "job-permissions": safe.replace(
+            "    runs-on:", "    permissions:\n      contents: write\n    runs-on:"
+        ),
     }
     for expected, source in cases.items():
         found = workflow_violations(Path("sample.yml"), source)
@@ -116,8 +121,11 @@ def main() -> int:
 
     if args.self_test:
         self_test()
+        if not args.paths:
+            return 0
     if not args.paths:
-        return 0
+        print("no workflow files supplied", file=sys.stderr)
+        return 1
 
     failed = False
     for raw_path in args.paths:

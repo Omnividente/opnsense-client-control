@@ -1,0 +1,16 @@
+name: Workflow policy negative control
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prove-job-permissions-guard:
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Never run automatically
+        run: 'true'
