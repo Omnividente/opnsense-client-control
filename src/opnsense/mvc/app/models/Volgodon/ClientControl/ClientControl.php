@@ -12,6 +12,8 @@ use OPNsense\Base\Messages\Message;
 
 class ClientControl extends BaseModel
 {
+    private $pendingAudit = [];
+
     public function getClientEndpoints($clientUuid)
     {
         $result = [];
@@ -112,18 +114,44 @@ class ClientControl extends BaseModel
     public function appendAudit($username, $operation, $summary, $result = 'ok')
     {
         $entry = $this->audit->entry->Add();
-        $entry->timestamp = gmdate('c');
-        $entry->username = (string)$username;
-        $entry->operation = (string)$operation;
-        $entry->summary = (string)$summary;
-        $entry->result = $result === 'error' ? 'error' : 'ok';
+        $record = [
+            'uuid' => (string)$entry->getAttribute('uuid'),
+            'timestamp' => gmdate('c'),
+            'username' => (string)$username,
+            'operation' => (string)$operation,
+            'summary' => (string)$summary,
+            'result' => $result === 'error' ? 'error' : 'ok',
+        ];
+        $entry->timestamp = $record['timestamp'];
+        $entry->username = $record['username'];
+        $entry->operation = $record['operation'];
+        $entry->summary = AuditLog::compactSummary($record['summary']);
+        $entry->result = $record['result'];
+        $this->pendingAudit[] = $record;
 
         $uuids = [];
         foreach ($this->audit->entry->iterateItems() as $uuid => $unused) {
             $uuids[] = $uuid;
         }
-        while (count($uuids) > 1000) {
+        while (count($uuids) > AuditLog::CONFIG_LIMIT) {
             $this->audit->entry->del(array_shift($uuids));
+        }
+    }
+
+    public function flushAuditLog()
+    {
+        if ($this->pendingAudit === []) {
+            return true;
+        }
+        try {
+            (new AuditLog())->append($this->pendingAudit);
+            $this->pendingAudit = [];
+            return true;
+        } catch (\Throwable $error) {
+            if (function_exists('syslog')) {
+                syslog(LOG_ERR, 'Client Control external audit log failed: ' . $error->getMessage());
+            }
+            return false;
         }
     }
 

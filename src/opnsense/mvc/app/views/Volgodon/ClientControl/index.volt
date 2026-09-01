@@ -544,6 +544,8 @@ $(document).ready(function () {
     function loadSettings() {
         mapDataToFormUI({frm_general: '/api/clientcontrol/settings/get'}).done(function (data) {
             state.revision = Number(data.revision || (data.general || {}).revision || 0);
+            $('#revision').val(state.revision);
+
             formatTokenizersUI();
             $('.selectpicker').selectpicker('refresh');
             refreshStatus();
@@ -551,12 +553,13 @@ $(document).ready(function () {
     }
 
     $('#save-settings').click(function () {
-        const payload = getFormData('frm_general');
-        payload.revision = state.revision;
-        postJson('/api/clientcontrol/settings/set', payload).done(function (data) {
+        $('#revision').val(state.revision);
+        saveFormToEndpoint('/api/clientcontrol/settings/set', 'frm_general', function (data) {
             if (mutationSucceeded(data)) {
                 loadSettings();
             }
+        }, true, function (data) {
+            mutationSucceeded(data);
         });
     });
 
@@ -808,7 +811,8 @@ $(document).ready(function () {
             revision: state.revision,
             strategy: $('#plan-strategy').val(),
             plan_fingerprint: plan.plan_fingerprint,
-            confirm_enforce: plan.mode === 'enforce' ? plan.plan_fingerprint : ''
+            runtime_plan_fingerprint: plan.runtime_plan_fingerprint,
+            confirm_enforce: plan.mode === 'enforce' ? plan.runtime_plan_fingerprint : ''
         };
         const prompt = plan.mode === 'enforce'
             ? '{{ lang._('These rules may immediately allow, block, or slow client traffic. Apply the changes?') }}'
@@ -941,7 +945,7 @@ $(document).ready(function () {
 
     $('#refresh-audit').click(function () {
         queryJson('/api/clientcontrol/diagnostics/audit', {
-            rowCount: 1000,
+            rowCount: 200,
             current: 1,
             sort: {timestamp: 'desc'}
         }).done(function (data) {

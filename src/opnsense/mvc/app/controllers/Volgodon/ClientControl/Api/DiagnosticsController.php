@@ -8,6 +8,8 @@
 namespace Volgodon\ClientControl\Api;
 
 use OPNsense\Core\Backend;
+use Volgodon\ClientControl\AuditLog;
+
 use Volgodon\ClientControl\Reconciler;
 use Volgodon\ClientControl\Platform;
 use Volgodon\ClientControl\Translations;
@@ -125,6 +127,7 @@ class DiagnosticsController extends ClientControlControllerBase
                 'pending_operations' => count($nonNoop),
                 'conflicts' => $plan['conflicts'],
                 'plan_fingerprint' => $plan['plan_fingerprint'],
+                'runtime_plan_fingerprint' => $plan['runtime_plan_fingerprint'],
                 'notices' => $plan['notices'] ?? [],
             ];
         } catch (\Throwable $error) {
@@ -162,27 +165,41 @@ class DiagnosticsController extends ClientControlControllerBase
 
     public function auditAction()
     {
-        $model = $this->getModel();
         $records = [];
-        foreach ($model->audit->entry->iterateItems() as $uuid => $entry) {
+        foreach ($this->auditRecords($this->getModel()) as $entry) {
             $records[] = [
-                'uuid' => $uuid,
-                'timestamp' => (string)$entry->timestamp,
-                'username' => (string)$entry->username,
-                'operation' => (string)$entry->operation,
-                'summary' => Translations::auditSummary((string)$entry->operation, (string)$entry->summary),
-                'result' => (string)$entry->result,
+                'uuid' => $entry['uuid'],
+                'timestamp' => $entry['timestamp'],
+                'username' => $entry['username'],
+                'operation' => $entry['operation'],
+                'summary' => Translations::auditSummary($entry['operation'], $entry['summary']),
+                'result' => $entry['result'],
             ];
         }
         return $this->searchRecordsetBase($records, null, 'timestamp', null, SORT_NATURAL | SORT_FLAG_CASE);
     }
+
     public function auditExportAction()
     {
         $model = $this->getModel();
-        $records = [];
+        $records = $this->auditRecords($model);
+        usort($records, function ($left, $right) {
+            return [$left['timestamp'], $left['uuid']] <=> [$right['timestamp'], $right['uuid']];
+        });
+        return [
+            'format' => 'client-control-audit-v1',
+            'generated_at' => gmdate('c'),
+            'rows' => $records,
+            'revision' => (int)(string)$model->general->revision,
+        ];
+    }
+
+    private function auditRecords($model)
+    {
+        $configRecords = [];
         foreach ($model->audit->entry->iterateItems() as $uuid => $entry) {
-            $records[] = [
-                'uuid' => $uuid,
+            $configRecords[] = [
+                'uuid' => (string)$uuid,
                 'timestamp' => (string)$entry->timestamp,
                 'username' => (string)$entry->username,
                 'operation' => (string)$entry->operation,
@@ -190,13 +207,14 @@ class DiagnosticsController extends ClientControlControllerBase
                 'result' => (string)$entry->result,
             ];
         }
-        usort($records, fn($left, $right) => strcmp($left['timestamp'], $right['timestamp']));
-        return [
-            'format' => 'client-control-audit-v1',
-            'generated_at' => gmdate('c'),
-            'rows' => $records,
-            'revision' => (int)(string)$model->general->revision,
-        ];
+        try {
+            return (new AuditLog())->merge($configRecords);
+        } catch (\Throwable $error) {
+            $this->getLogger('clientcontrol')->error(
+                'Unable to read Client Control audit history: ' . $error->getMessage()
+            );
+            return $configRecords;
+        }
     }
 
 

@@ -1,5 +1,9 @@
 <form>
     <field>
+        <id>revision</id>
+        <type>hidden</type>
+    </field>
+    <field>
         <id>general.enabled</id>
         <label>Enable Client Control</label>
         <type>checkbox</type>

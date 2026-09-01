@@ -25,6 +25,15 @@ class ClientsController extends ClientControlControllerBase
         'upload_override',
         'metric_override',
     ];
+    private const INTEGER_LIMITS = [
+        'download_override' => 1000000,
+        'upload_override' => 1000000,
+    ];
+    private const INTEGER_LABELS = [
+        'download_override' => 'Client download limit',
+        'upload_override' => 'Client upload limit',
+    ];
+
 
     public function searchClientAction()
     {
@@ -125,6 +134,16 @@ class ClientsController extends ClientControlControllerBase
             $this->assertRevision($model);
             $payload = $this->getRequiredArray('client');
             $endpoints = $this->extractEndpoints($payload, false);
+            $validations = $this->integerValidations(
+                $payload,
+                self::INTEGER_LIMITS,
+                'client',
+                self::INTEGER_LABELS
+            );
+            if ($validations !== []) {
+                return ['result' => 'failed', 'validations' => $validations];
+            }
+
             $client = $model->clients->client->Add();
             $client->setNodes($this->clientFields($payload));
             $uuid = $client->getAttribute('uuid');
@@ -157,6 +176,16 @@ class ClientsController extends ClientControlControllerBase
             }
             $payload = $this->getRequiredArray('client');
             $endpoints = $this->extractEndpoints($payload, false);
+            $validations = $this->integerValidations(
+                $payload,
+                self::INTEGER_LIMITS,
+                'client',
+                self::INTEGER_LABELS
+            );
+            if ($validations !== []) {
+                return ['result' => 'failed', 'validations' => $validations];
+            }
+
             $client->setNodes($this->clientFields($payload));
             if ($endpoints !== null) {
                 $this->syncEndpoints($model, $uuid, $endpoints, true);
@@ -624,7 +653,13 @@ class ClientsController extends ClientControlControllerBase
 
     private function clientFields($payload)
     {
-        return array_intersect_key($payload, array_flip(self::CLIENT_FIELDS));
+        $fields = array_intersect_key($payload, array_flip(self::CLIENT_FIELDS));
+        foreach (array_keys(self::INTEGER_LIMITS) as $field) {
+            if (array_key_exists($field, $fields)) {
+                $fields[$field] = (string)$fields[$field];
+            }
+        }
+        return $fields;
     }
 
     private function extractEndpoints(&$payload, $required = true)

@@ -1,5 +1,25 @@
 #!/bin/sh
+set -eu
 rm -f /var/run/clientcontrol-uninstalling
+
+AUDIT_DIR=/var/log/clientcontrol
+AUDIT_FILE=$AUDIT_DIR/audit.log
+if [ -L "$AUDIT_DIR" ] || [ -L "$AUDIT_FILE" ]; then
+    echo 'refusing to use a symbolic-link Client Control audit path' >&2
+    exit 1
+fi
+if pw usershow wwwonly >/dev/null 2>&1; then
+    AUDIT_OWNER=wwwonly
+else
+    AUDIT_OWNER=www
+fi
+install -d -o root -g wheel -m 0751 "$AUDIT_DIR"
+if [ ! -e "$AUDIT_FILE" ]; then
+    install -o "$AUDIT_OWNER" -g wheel -m 0640 /dev/null "$AUDIT_FILE"
+else
+    chown "$AUDIT_OWNER":wheel "$AUDIT_FILE"
+    chmod 0640 "$AUDIT_FILE"
+fi
 
 # Installation is intentionally non-invasive. The model defaults to disabled
 # and preview-only; administrators must review and apply an exact plan in UI.
