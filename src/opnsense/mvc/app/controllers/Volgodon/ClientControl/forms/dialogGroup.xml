@@ -35,7 +35,7 @@
     </field>
     <field>
         <id>group.members</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Clients</label><visible>true</visible></grid_view>
     </field>
     <field>
@@ -67,7 +67,7 @@
     </field>
     <field>
         <id>group.sync_state</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Rules</label><visible>true</visible><formatter>syncState</formatter></grid_view>
     </field>
     <field>

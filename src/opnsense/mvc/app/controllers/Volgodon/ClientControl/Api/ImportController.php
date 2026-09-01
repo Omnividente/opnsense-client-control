@@ -23,6 +23,7 @@ class ImportController extends ClientControlControllerBase
             if (!in_array($alias['type'], ['host', 'network', 'mac', 'networkgroup'], true)) {
                 continue;
             }
+            $importable = $alias['type'] !== 'network';
             $records[] = [
                 'uuid' => $alias['uuid'],
                 'name' => $alias['name'],
@@ -31,13 +32,17 @@ class ImportController extends ClientControlControllerBase
                 'description' => $alias['description'],
                 'items' => $alias['items'],
                 'item_count' => count($alias['items']),
-                'candidate' => $alias['type'] === 'networkgroup' ? 'group' : 'client',
-                'recommended' => in_array($alias['name'], ['upr_sit7', 'Unlim'], true),
+                'candidate' => $alias['type'] === 'networkgroup' ? 'group' :
+                    ($importable ? 'client' : 'unsupported'),
+                'importable' => $importable,
+                'reason' => $importable ? '' :
+                    gettext('Network aliases contain subnets, but client endpoints require individual IP addresses.'),
+                'recommended' => false,
             ];
         }
         return $this->searchRecordsetBase(
             $records,
-            ['name', 'type', 'proto', 'description', 'items'],
+            ['name', 'type', 'proto', 'description', 'items', 'reason'],
             'name'
         );
     }
@@ -46,7 +51,12 @@ class ImportController extends ClientControlControllerBase
     {
         $aliases = $this->aliasMap();
         $selected = $this->selectedAliasNames($aliases);
-        return $this->buildPreview($aliases, $selected, $this->getModel());
+        return $this->buildPreview(
+            $aliases,
+            $selected,
+            $this->getModel(),
+            $this->requestedReuseExistingGroups()
+        );
     }
 
     public function applyAction()
@@ -57,7 +67,8 @@ class ImportController extends ClientControlControllerBase
             $this->assertRevision($model);
             $aliases = $this->aliasMap();
             $selected = $this->selectedAliasNames($aliases);
-            $preview = $this->buildPreview($aliases, $selected, $model);
+            $reuseExistingGroups = $this->requestedReuseExistingGroups();
+            $preview = $this->buildPreview($aliases, $selected, $model, $reuseExistingGroups);
             $offeredHash = (string)$this->request->getPost('preview_hash');
             if ($offeredHash === '' || !hash_equals($preview['preview_hash'], $offeredHash)) {
                 throw new UserException(
@@ -65,8 +76,11 @@ class ImportController extends ClientControlControllerBase
                     gettext('Client Control')
                 );
             }
-            if (!empty($preview['errors'])) {
-                throw new UserException(implode("\n", $preview['errors']), gettext('Alias import'));
+            if (empty($preview['can_apply'])) {
+                throw new UserException(
+                    implode("\n", $preview['errors'] ?: [gettext('No valid aliases remain to import.')]),
+                    gettext('Alias import')
+                );
             }
 
             $groupMapping = [];
@@ -77,7 +91,7 @@ class ImportController extends ClientControlControllerBase
                     continue;
                 }
                 $group = $model->groups->group->Add();
-                $group->enabled = '1';
+                $group->enabled = '0';
                 $group->name = $proposal['name'];
                 $group->description = $proposal['description'];
                 $group->access = 'allow';
@@ -94,7 +108,7 @@ class ImportController extends ClientControlControllerBase
                     throw new UserException(gettext('Unable to resolve an imported client group.'), gettext('Alias import'));
                 }
                 $client = $model->clients->client->Add();
-                $client->enabled = '1';
+                $client->enabled = '0';
                 $client->name = $proposal['name'];
                 $client->group = $groupUuid;
                 $client->comment = $proposal['comment'];
@@ -160,9 +174,7 @@ class ImportController extends ClientControlControllerBase
     private function selectedAliasNames($aliases)
     {
         $selected = $this->request->getPost('alias_names');
-        if ($selected === null) {
-            $selected = array_values(array_intersect(['upr_sit7', 'Unlim'], array_keys($aliases)));
-        } elseif (!is_array($selected) || empty($selected)) {
+        if (!is_array($selected) || empty($selected)) {
             throw new UserException(gettext('Select at least one importable alias.'), gettext('Alias import'));
         }
         $result = [];
@@ -173,16 +185,24 @@ class ImportController extends ClientControlControllerBase
                     gettext('Alias import')
                 );
             }
+            if ($aliases[$name]['type'] === 'network') {
+                throw new UserException(
+                    sprintf(gettext('Network alias %s cannot be imported as a client endpoint.'), $name),
+                    gettext('Alias import')
+                );
+            }
             $result[] = $name;
-        }
-        if (empty($result)) {
-            throw new UserException(gettext('Select at least one importable alias.'), gettext('Alias import'));
         }
         sort($result, SORT_NATURAL | SORT_FLAG_CASE);
         return $result;
     }
 
-    private function buildPreview($aliases, $selected, $module)
+    private function requestedReuseExistingGroups()
+    {
+        return (string)$this->request->getPost('reuse_existing_groups') === '1';
+    }
+
+    private function buildPreview($aliases, $selected, $module, $reuseExistingGroups = false)
     {
         $warnings = [];
         $errors = [];
@@ -196,7 +216,21 @@ class ImportController extends ClientControlControllerBase
                 $selectedLeaves[$name] = true;
                 continue;
             }
-            $members = $this->resolveGroupMembers($name, $aliases, [], $warnings, $errors);
+            $groupWarnings = [];
+            $groupErrors = [];
+            $members = $this->resolveGroupMembers(
+                $name,
+                $aliases,
+                [],
+                $groupWarnings,
+                $groupErrors
+            );
+            $warnings = array_merge($warnings, $groupWarnings);
+            if ($groupErrors !== []) {
+                $errors = array_merge($errors, $groupErrors);
+                continue;
+            }
+            $conflict = false;
             foreach ($members as $member) {
                 if (isset($clientGroup[$member]) && $clientGroup[$member] !== $name) {
                     $errors[] = sprintf(
@@ -205,7 +239,13 @@ class ImportController extends ClientControlControllerBase
                         $clientGroup[$member],
                         $name
                     );
+                    $conflict = true;
                 }
+            }
+            if ($conflict) {
+                continue;
+            }
+            foreach ($members as $member) {
                 $clientGroup[$member] = $name;
                 $selectedLeaves[$member] = true;
             }
@@ -217,10 +257,12 @@ class ImportController extends ClientControlControllerBase
                     $alias['description'] : sprintf(gettext('Imported from alias %s'), $name),
                 'members' => $members,
                 'existing_uuid' => '',
+                'reuse_existing' => false,
             ];
         }
+
         $ungrouped = array_values(array_diff(array_keys($selectedLeaves), array_keys($clientGroup)));
-        if (!empty($ungrouped)) {
+        if ($ungrouped !== []) {
             $groupName = 'Imported';
             $proposalNames = array_map(
                 fn($proposal) => strtolower($proposal['name']),
@@ -229,17 +271,17 @@ class ImportController extends ClientControlControllerBase
             if (in_array(strtolower($groupName), $proposalNames, true)) {
                 $groupName = 'Imported standalone';
             }
-            $groupKey = '__standalone__';
-            $groupProposals[$groupKey] = [
-                'source_alias' => $groupKey,
+            $groupProposals['__standalone__'] = [
+                'source_alias' => '__standalone__',
                 'source_uuid' => '',
                 'name' => $groupName,
                 'description' => gettext('Imported standalone aliases'),
                 'members' => $ungrouped,
                 'existing_uuid' => '',
+                'reuse_existing' => false,
             ];
             foreach ($ungrouped as $member) {
-                $clientGroup[$member] = $groupKey;
+                $clientGroup[$member] = '__standalone__';
             }
         }
 
@@ -247,8 +289,26 @@ class ImportController extends ClientControlControllerBase
         foreach ($module->groups->group->iterateItems() as $uuid => $group) {
             $existingGroups[strtolower((string)$group->name)] = $uuid;
         }
-        foreach ($groupProposals as &$group) {
-            $group['existing_uuid'] = $existingGroups[strtolower($group['name'])] ?? '';
+        $blockedGroups = [];
+        foreach ($groupProposals as $key => &$group) {
+            $existingUuid = $existingGroups[strtolower($group['name'])] ?? '';
+            if ($existingUuid === '') {
+                continue;
+            }
+            if (!$reuseExistingGroups) {
+                $blockedGroups[$key] = true;
+                $errors[] = sprintf(
+                    gettext('Group %s already exists; explicitly allow reuse or rename it before import.'),
+                    $group['name']
+                );
+                continue;
+            }
+            $group['existing_uuid'] = $existingUuid;
+            $group['reuse_existing'] = true;
+            $warnings[] = sprintf(
+                gettext('Existing group %s will be reused without changing its policy.'),
+                $group['name']
+            );
         }
         unset($group);
 
@@ -266,25 +326,45 @@ class ImportController extends ClientControlControllerBase
             $endpointOwners[$key] = $owner;
         }
         foreach (array_keys($selectedLeaves) as $name) {
+            $groupSource = $clientGroup[$name] ?? '';
+            if ($groupSource === '' || isset($blockedGroups[$groupSource])) {
+                $errors[] = sprintf(gettext('Client %s was skipped because its target group is unavailable.'), $name);
+                continue;
+            }
             if (isset($existingClients[strtolower($name)])) {
                 $errors[] = sprintf(gettext('Client %s already exists in Client Control.'), $name);
                 continue;
             }
-            $endpoints = $this->resolveEndpoints($name, $aliases, [], $warnings, $errors);
-            if (empty($endpoints)) {
-                $errors[] = sprintf(gettext('Alias %s contains no importable IP or MAC endpoints.'), $name);
-                continue;
+            $clientWarnings = [];
+            $clientErrors = [];
+            $endpoints = $this->resolveEndpoints(
+                $name,
+                $aliases,
+                [],
+                $clientWarnings,
+                $clientErrors
+            );
+            if ($endpoints === []) {
+                $clientErrors[] = sprintf(gettext('Alias %s contains no importable IP or MAC endpoints.'), $name);
             }
             foreach ($endpoints as $endpoint) {
                 $key = $endpoint['kind'] . ':' . strtolower($endpoint['value']);
                 if (isset($endpointOwners[$key]) && $endpointOwners[$key] !== $name) {
-                    $errors[] = sprintf(
+                    $clientErrors[] = sprintf(
                         gettext('Endpoint %s occurs in both %s and %s.'),
                         $endpoint['value'],
                         $endpointOwners[$key],
                         $name
                     );
                 }
+            }
+            $warnings = array_merge($warnings, $clientWarnings);
+            if ($clientErrors !== []) {
+                $errors = array_merge($errors, $clientErrors);
+                continue;
+            }
+            foreach ($endpoints as $endpoint) {
+                $key = $endpoint['kind'] . ':' . strtolower($endpoint['value']);
                 $endpointOwners[$key] = $name;
             }
             $source = $aliases[$name];
@@ -294,22 +374,31 @@ class ImportController extends ClientControlControllerBase
                 'name' => $name,
                 'comment' => $source['description'] !== '' ?
                     $source['description'] : sprintf(gettext('Imported from alias %s'), $name),
-                'group_source_alias' => $clientGroup[$name] ?? array_key_first($groupProposals),
+                'group_source_alias' => $groupSource,
                 'endpoints' => $endpoints,
+                'enabled' => false,
             ];
         }
 
+        $usedGroups = array_fill_keys(array_column($clients, 'group_source_alias'), true);
+        $groupProposals = array_filter(
+            $groupProposals,
+            fn($proposal) => isset($usedGroups[$proposal['source_alias']])
+        );
         ksort($groupProposals, SORT_NATURAL | SORT_FLAG_CASE);
         usort($clients, fn($left, $right) => strnatcasecmp($left['name'], $right['name']));
         $preview = [
             'selected_aliases' => array_values($selected),
+            'reuse_existing_groups' => $reuseExistingGroups,
             'groups' => array_values($groupProposals),
             'clients' => $clients,
             'warnings' => array_values(array_unique($warnings)),
             'errors' => array_values(array_unique($errors)),
+            'can_apply' => $clients !== [],
+            'partial' => $clients !== [] && $errors !== [],
         ];
         $preview['preview_hash'] = Canonical::fingerprint($preview);
-        $preview['revision'] = ((int) (string) $module->general->revision);
+        $preview['revision'] = (int)(string)$module->general->revision;
         return $preview;
     }
 

@@ -32,12 +32,7 @@
     <field>
         <id>general.destination_alias</id>
         <label>Destination alias</label>
-        <type>text</type>
+        <type>dropdown</type>
         <help>Fill this only when “Selected alias” is chosen above.</help>
-    </field>
-    <field>
-        <id>general.revision</id>
-        <label>Settings version</label>
-        <type>hidden</type>
     </field>
 </form>

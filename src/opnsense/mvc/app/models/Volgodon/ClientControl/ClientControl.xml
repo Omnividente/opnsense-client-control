@@ -1,6 +1,6 @@
 <model>
     <mount>//Volgodon/ClientControl</mount>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <description>Client access and bandwidth management</description>
     <items>
         <general>
@@ -38,7 +38,7 @@
                     <custom>Custom alias</custom>
                 </OptionValues>
             </destination_scope>
-            <destination_alias type="NetworkAliasField"/>
+            <destination_alias type=".\DestinationAliasField"/>
             <stale_neighbor_policy type="OptionField">
                 <Default>deny</Default>
                 <Required>Y</Required>
@@ -63,6 +63,7 @@
             </last_apply_status>
             <last_apply_message type="TextField"/>
             <last_apply_time type="TextField"/>
+            <applied_filter_backend type="TextField"/>
         </general>
         <groups>
             <group type="ArrayField">
@@ -169,6 +170,7 @@
                     </Constraints>
                 </name>
                 <group type="TextField">
+                    <Required>Y</Required>
                     <Mask>/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i</Mask>
                     <ValidationMessage>Related group identifier is invalid.</ValidationMessage>
                 </group>

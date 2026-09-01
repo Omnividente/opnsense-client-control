@@ -5,6 +5,7 @@
             <pattern>ui/clientcontrol/*</pattern>
             <pattern>api/clientcontrol/*/search*</pattern>
             <pattern>api/clientcontrol/*/get*</pattern>
+            <pattern>api/clientcontrol/*/selectors*</pattern>
             <pattern>api/clientcontrol/*/status*</pattern>
             <pattern>api/clientcontrol/*/plan*</pattern>
             <pattern>api/clientcontrol/*/scan*</pattern>
@@ -19,6 +20,7 @@
             <pattern>ui/clientcontrol/*</pattern>
             <pattern>api/clientcontrol/*/search*</pattern>
             <pattern>api/clientcontrol/*/get*</pattern>
+            <pattern>api/clientcontrol/*/selectors*</pattern>
             <pattern>api/clientcontrol/*/status*</pattern>
             <pattern>api/clientcontrol/*/plan*</pattern>
             <pattern>api/clientcontrol/*/scan*</pattern>

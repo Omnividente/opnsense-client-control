@@ -15,7 +15,7 @@ Client Control помогает управлять доступом и скор�
 - FreeBSD `14.1`, ABI `1401000`;
 - PHP `8.2.24`;
 - `amd64`;
-- пакет `os-client-control-1.0`.
+- пакет `os-client-control-1.1`.
 
 Ограничения по версиям:
 
@@ -257,7 +257,7 @@ python3 tests/api-smoke.py
 
 Если нужен локальный пакет отката:
 
-1. скопируйте `dist/os-client-control-1.0.rollback.pkg` в закрытый каталог на шлюзе;
+1. скопируйте подходящий `dist/os-client-control-<версия>.rollback.pkg` в закрытый каталог на шлюзе;
 2. проверьте его `.sha256`;
 3. установите пакет;
 4. перезапустите `configd`;
@@ -266,7 +266,8 @@ python3 tests/api-smoke.py
 Пример на шлюзе:
 
 ```sh
-pkg add -f /root/private-stage/os-client-control-1.0.rollback.pkg
+version=1.0
+pkg add -f "/root/private-stage/os-client-control-${version}.rollback.pkg"
 configctl configd restart
 pkg check -s os-client-control
 configctl clientcontrol health
@@ -280,13 +281,16 @@ configctl clientcontrol health
 pkg delete -y os-client-control
 ```
 
+Это **не означает сохранение неизменной политики трафика**. После удаления runtime-hook больше не регистрирует ранние правила Client Control; на платформах с runtime registry они исчезают при следующей перезагрузке фильтра. На платформах с постоянными core-объектами они могут остаться без установленного владельца. Скрипт удаления печатает выбранный режим и это последствие до изменения пакета.
+
 Контролируемое удаление объектов Client Control:
 
 ```sh
 env DEINSTALL_CONTROLLED_OBJECTS=1 pkg delete -y os-client-control
 ```
 
-Этот режим удаляет только зарегистрированные объекты с подтверждёнными признаками принадлежности Client Control. Клиенты и группы в модели сохраняются.
+Этот режим намеренно меняет политику трафика: удаляет только зарегистрированные объекты с подтверждёнными признаками принадлежности Client Control и перезагружает firewall/shaper. Клиенты и группы в модели сохраняются.
+
 
 ## Сборка и временные файлы
 

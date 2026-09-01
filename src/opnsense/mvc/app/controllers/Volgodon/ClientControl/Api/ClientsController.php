@@ -64,6 +64,26 @@ class ClientsController extends ClientControlControllerBase
         $result['revision'] = ((int) (string) $model->general->revision);
         return $result;
     }
+    public function selectorsAction()
+    {
+        $model = $this->getModel();
+        $groups = [];
+        foreach ($model->groups->group->iterateItems() as $uuid => $group) {
+            $groups[] = ['uuid' => $uuid, 'name' => (string)$group->name];
+        }
+        $clients = [];
+        foreach ($model->clients->client->iterateItems() as $uuid => $client) {
+            $clients[] = ['uuid' => $uuid, 'name' => (string)$client->name];
+        }
+        usort($groups, fn($left, $right) => strnatcasecmp($left['name'], $right['name']));
+        usort($clients, fn($left, $right) => strnatcasecmp($left['name'], $right['name']));
+        return [
+            'groups' => $groups,
+            'clients' => $clients,
+            'revision' => (int)(string)$model->general->revision,
+        ];
+    }
+
 
     public function getClientAction($uuid = null)
     {
@@ -374,8 +394,21 @@ class ClientsController extends ClientControlControllerBase
         $model = $this->lockModel();
         try {
             $this->assertRevision($model);
+            $endpoint = $model->getNodeByReference('endpoints.endpoint.' . $uuid);
+            if ($endpoint === null) {
+                throw new UserException(gettext('The endpoint no longer exists.'), gettext('Client Control'));
+            }
+            $clientUuid = (string)$endpoint->client;
             if (!$model->endpoints->endpoint->del($uuid)) {
                 throw new UserException(gettext('The endpoint no longer exists.'), gettext('Client Control'));
+            }
+            $client = $model->getNodeByReference('clients.client.' . $clientUuid);
+            if ($client !== null && (string)$client->enabled === '1' &&
+                $model->getClientEndpoints($clientUuid) === []) {
+                throw new UserException(
+                    gettext('Disable the client before removing its last endpoint.'),
+                    gettext('Client Control')
+                );
             }
             return $this->finishMutation(
                 $model,
@@ -467,6 +500,9 @@ class ClientsController extends ClientControlControllerBase
             'metric' => $policy['metric'] ?? '',
             'max_states' => $policy['max_states'] ?? 0,
             'state_count' => (int)($runtime['state_count'] ?? 0),
+            'state_count_truncated' => !empty($runtime['state_count_truncated']),
+            'state_count_label' => !empty($runtime['state_count_truncated'])
+                ? (int)($runtime['state_count'] ?? 0) . '+' : (string)(int)($runtime['state_count'] ?? 0),
             'online' => !empty($runtime['online']),
             'sync_state' => $policy['sync_state'] ?? $model->getSyncState(),
             'effective_policy' => $policy,
@@ -478,7 +514,11 @@ class ClientsController extends ClientControlControllerBase
         $result = [];
         $clientIps = [];
         foreach ($model->clients->client->iterateItems() as $clientUuid => $client) {
-            $result[$clientUuid] = ['online' => false, 'state_count' => 0];
+            $result[$clientUuid] = [
+                'online' => false,
+                'state_count' => 0,
+                'state_count_truncated' => false,
+            ];
             $clientIps[$clientUuid] = [];
         }
         try {
@@ -532,8 +572,20 @@ class ClientsController extends ClientControlControllerBase
                     $clientsByIp[$ip][$clientUuid] = true;
                 }
             }
-            $states = json_decode($backend->configdpRun('filter list states', ['', '10000', '0', '', '']), true);
-            foreach (($states['details'] ?? []) as $state) {
+            $stateLimit = 10000;
+            $stateResponse = json_decode(
+                $backend->configdpRun('filter list states', ['', (string)$stateLimit, '0', '', '']),
+                true
+            ) ?? [];
+            $stateRows = $stateResponse['details'] ?? [];
+            $reportedStates = isset($stateResponse['total_entries'])
+                ? (int)$stateResponse['total_entries'] : count($stateRows);
+            $statesTruncated = $reportedStates > count($stateRows) || count($stateRows) >= $stateLimit;
+            foreach ($result as &$clientStats) {
+                $clientStats['state_count_truncated'] = $statesTruncated;
+            }
+            unset($clientStats);
+            foreach ($stateRows as $state) {
                 $matched = [];
                 foreach (['src_addr', 'dst_addr', 'nat_addr'] as $field) {
                     $ip = $this->normalizeAddress((string)($state[$field] ?? ''));

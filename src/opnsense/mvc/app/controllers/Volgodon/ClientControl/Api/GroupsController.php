@@ -30,10 +30,26 @@ class GroupsController extends ClientControlControllerBase
         'packet_rate',
         'packet_rate_seconds',
     ];
+    private const INTEGER_LIMITS = [
+        'download' => 1000000,
+        'upload' => 1000000,
+        'max_states' => 2147483647,
+        'max_tcp_connections' => 2147483647,
+        'connection_rate' => 4294967,
+        'connection_rate_seconds' => 2147483647,
+        'packet_rate' => 4294967,
+        'packet_rate_seconds' => 2147483647,
+    ];
+
 
     public function searchGroupAction()
     {
         $model = $this->getModel();
+        $memberCounts = [];
+        foreach ($model->clients->client->iterateItems() as $client) {
+            $groupUuid = (string)$client->group;
+            $memberCounts[$groupUuid] = ($memberCounts[$groupUuid] ?? 0) + 1;
+        }
         $records = [];
         foreach ($model->groups->group->iterateItems() as $uuid => $group) {
             $records[] = [
@@ -41,7 +57,7 @@ class GroupsController extends ClientControlControllerBase
                 'enabled' => ((string) $group->enabled === (string) '1') ? 1 : 0,
                 'name' => (string)$group->name,
                 'description' => (string)$group->description,
-                'members' => $model->getGroupMemberCount($uuid),
+                'members' => $memberCounts[$uuid] ?? 0,
                 'access' => (string)$group->access,
                 'shaping_mode' => (string)$group->shaping_mode,
                 'download' => ((int) (string) $group->download),
@@ -251,6 +267,22 @@ class GroupsController extends ClientControlControllerBase
 
     private function groupFields($payload)
     {
-        return array_intersect_key($payload, array_flip(self::GROUP_FIELDS));
+        $fields = array_intersect_key($payload, array_flip(self::GROUP_FIELDS));
+        foreach (self::INTEGER_LIMITS as $field => $maximum) {
+            if (!array_key_exists($field, $fields)) {
+                continue;
+            }
+            $value = $fields[$field];
+            if ((!is_string($value) && !is_int($value)) ||
+                !preg_match('/^(?:0|[1-9][0-9]*)$/D', (string)$value) ||
+                (int)$value > $maximum) {
+                throw new UserException(
+                    sprintf(gettext('%s must be a whole number from 0 through %d.'), $field, $maximum),
+                    gettext('Client Control')
+                );
+            }
+            $fields[$field] = (string)$value;
+        }
+        return $fields;
     }
 }

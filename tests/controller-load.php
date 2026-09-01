@@ -45,4 +45,57 @@ if (is_file('/usr/local/etc/inc/config.inc')) {
         !in_array('stale_neighbor_policy', $editableSettings, true),
         'the fixed stale-neighbor policy must not be mutable through the settings API'
     );
+    $fakeBackend = function ($filterResult = 'OK') {
+        return new class($filterResult) {
+            public $commands = [];
+            private $filterResult;
+
+            public function __construct($filterResult)
+            {
+                $this->filterResult = $filterResult;
+            }
+
+            public function configdRun($action, $background = false)
+            {
+                $this->commands[] = $action;
+                if ($action === 'filter refresh_aliases') {
+                    return '{"messages":[]}';
+                }
+                if ($action === 'filter reload skip_alias') {
+                    return $this->filterResult;
+                }
+                if (in_array($action, ['ipfw reload', 'shaper reload'], true)) {
+                    return 'OK';
+                }
+                if ($action === 'clientcontrol schedule') {
+                    return '{"status":"ok"}';
+                }
+                if ($action === 'clientcontrol runtime_guard') {
+                    return '{"status":"ok","runtime_guard":"verified"}';
+                }
+                return '';
+            }
+        };
+    };
+    $serviceReflection = new ReflectionClass(Volgodon\ClientControl\Api\ServiceController::class);
+    $serviceController = $serviceReflection->newInstanceWithoutConstructor();
+    $reloadRuntime = $serviceReflection->getMethod('reloadRuntime');
+    $reloadRuntime->setAccessible(true);
+    $backend = $fakeBackend();
+    $runtime = $reloadRuntime->invoke($serviceController, false, null, $backend);
+    same('OK', $runtime['filter'], 'a successful runtime reload must verify the firewall result');
+    $aliasPosition = array_search('filter refresh_aliases', $backend->commands, true);
+    $filterPosition = array_search('filter reload skip_alias', $backend->commands, true);
+    $ipfwPosition = array_search('ipfw reload', $backend->commands, true);
+    check($aliasPosition !== false && $filterPosition !== false && $aliasPosition < $filterPosition,
+        'aliases must refresh before the new filter ruleset is loaded');
+    check($ipfwPosition !== false && $ipfwPosition < $filterPosition,
+        'the filter ruleset must load after Traffic Shaper and IPFW runtime state');
+    $reloadFailed = false;
+    try {
+        $reloadRuntime->invoke($serviceController, false, null, $fakeBackend('FAILED'));
+    } catch (OPNsense\Base\UserException $error) {
+        $reloadFailed = str_contains($error->getMessage(), 'Firewall reload failed');
+    }
+    check($reloadFailed, 'a failed filter reload must abort apply and enter rollback');
 }

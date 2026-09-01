@@ -82,7 +82,7 @@ class ServiceController extends ClientControlControllerBase
 
             $backup = Config::getInstance()->backup();
             $mutating = true;
-            $plan = $reconciler->apply($strategy);
+            $plan = $reconciler->apply($strategy, $plan);
             foreach ($plan['operations'] as $operation) {
                 if ($operation['action'] === 'delete' &&
                     in_array($operation['core_type'], ['pipe', 'shaper_rule'], true)) {
@@ -94,6 +94,7 @@ class ServiceController extends ClientControlControllerBase
             $model->general->last_apply_status = 'ok';
             $model->general->last_apply_message = $this->countSummary($plan['counts']);
             $model->general->last_apply_time = gmdate('c');
+            $model->general->applied_filter_backend = Platform::featureMatrix()['filter_backend'];
             $model->appendAudit(
                 $this->getUserName(),
                 'service.apply',
@@ -109,7 +110,7 @@ class ServiceController extends ClientControlControllerBase
             ]);
 
             $runtime = $this->reloadRuntime($flushIpFw, $model);
-            $verified = $this->verifyAppliedState($model);
+            $verified = $this->verifyAppliedState($model, $reconciler->getResolvedMacs());
             $verified['runtime'] = $runtime;
             $verified['plan'] = $plan;
             $verified['result'] = 'applied';
@@ -132,52 +133,49 @@ class ServiceController extends ClientControlControllerBase
 
     public function statusAction()
     {
-        $model = $this->getModel();
-        $counts = [];
-        foreach ($model->managed_objects->object->iterateItems() as $object) {
-            $type = (string)$object->core_type;
-            $counts[$type] = ($counts[$type] ?? 0) + 1;
-        }
-        ksort($counts, SORT_STRING);
-        $syncState = $model->getSyncState();
-        $healthStatus = 'ok';
-        $conflicts = [];
+        $model = $this->lockModel();
         try {
-            $healthPlan = (new Reconciler($model))->plan('fail');
-            $conflicts = $healthPlan['conflicts'];
-            if ($healthPlan['status'] !== 'ok') {
-                $syncState = 'conflict';
-                $healthStatus = 'conflict';
+            $counts = [];
+            foreach ($model->managed_objects->object->iterateItems() as $object) {
+                $type = (string)$object->core_type;
+                $counts[$type] = ($counts[$type] ?? 0) + 1;
             }
-        } catch (\Throwable $error) {
-            $syncState = 'error';
-            $healthStatus = 'error';
-            $conflicts[] = ['message' => $error->getMessage()];
+            ksort($counts, SORT_STRING);
+            $syncState = $model->getSyncState();
+            $platform = Platform::featureMatrix((string)$model->general->applied_filter_backend);
+            return [
+                'status' => (string)$model->general->last_apply_status,
+                'sync_state' => $syncState,
+                'revision' => (int)(string)$model->general->revision,
+                'last_applied_revision' => (int)(string)$model->general->last_applied_revision,
+                'last_apply_time' => (string)$model->general->last_apply_time,
+                'last_apply_message' => Translations::countSummary((string)$model->general->last_apply_message),
+                'managed_objects' => $counts,
+                'health_status' => in_array($syncState, ['error', 'conflict'], true) ? $syncState : 'ok',
+                'conflicts' => [],
+                'deep_check_required' => true,
+                'platform' => $platform,
+            ];
+        } finally {
+            $this->unlockModel();
         }
-        return [
-            'status' => (string)$model->general->last_apply_status,
-            'sync_state' => $syncState,
-            'revision' => ((int) (string) $model->general->revision),
-            'last_applied_revision' => ((int) (string) $model->general->last_applied_revision),
-            'last_apply_time' => (string)$model->general->last_apply_time,
-            'last_apply_message' => Translations::countSummary((string)$model->general->last_apply_message),
-            'managed_objects' => $counts,
-            'health_status' => $healthStatus,
-            'conflicts' => $conflicts,
-        ];
     }
 
-    private function verifyAppliedState(ClientControl $model)
+    private function verifyAppliedState(ClientControl $model, array $resolvedMacs = [])
     {
-        $plan = (new Reconciler($model))->plan('fail');
+        $plan = (new Reconciler($model, null, null, $resolvedMacs))->plan('fail');
         $unexpected = array_values(array_filter(
             $plan['operations'],
             fn($operation) => $operation['action'] !== 'noop'
         ));
         if ($plan['status'] !== 'ok' || !empty($unexpected)) {
             $details = array_map(
-                fn($operation) => sprintf('%s:%s:%s',
-                    $operation['action'], $operation['core_type'], $operation['core_name']),
+                fn($operation) => sprintf(
+                    '%s:%s:%s',
+                    $operation['action'],
+                    $operation['core_type'],
+                    $operation['core_name']
+                ),
                 $unexpected
             );
             throw new UserException(
@@ -191,15 +189,15 @@ class ServiceController extends ClientControlControllerBase
         }
         return [
             'verified' => true,
-            'revision' => ((int) (string) $model->general->revision),
+            'revision' => (int)(string)$model->general->revision,
             'managed_objects' => count($plan['operations']),
             'plan_fingerprint' => $plan['plan_fingerprint'],
         ];
     }
 
-    private function reloadRuntime($flushIpFw = false, ClientControl $model = null)
+    private function reloadRuntime($flushIpFw = false, ClientControl $model = null, $backend = null)
     {
-        $backend = new Backend();
+        $backend = $backend ?? new Backend();
         $backend->configdRun('template reload OPNsense/Filter');
         $aliasOutput = trim($backend->configdRun('filter refresh_aliases'));
         $aliasResult = json_decode($aliasOutput, true);
@@ -237,6 +235,9 @@ class ServiceController extends ClientControlControllerBase
             throw new UserException(sprintf(gettext('IPFW reload failed: %s'), $ipfw), gettext('Client Control'));
         }
         $filter = trim($backend->configdRun('filter reload skip_alias'));
+        if ($filter !== 'OK') {
+            throw new UserException(sprintf(gettext('Firewall reload failed: %s'), $filter), gettext('Client Control'));
+        }
         $schedule = json_decode(trim($backend->configdRun('clientcontrol schedule')), true);
         if (!is_array($schedule) || ($schedule['status'] ?? '') !== 'ok') {
             throw new UserException(

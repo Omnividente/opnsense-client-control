@@ -13,12 +13,14 @@ require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/FirewallHook.php';
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/ScheduleEvaluator.php';
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php';
+require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php';
 
 use Volgodon\ClientControl\Canonical;
 use Volgodon\ClientControl\Compiler;
 use Volgodon\ClientControl\Planner;
 use Volgodon\ClientControl\FirewallHook;
 use Volgodon\ClientControl\ScheduleEvaluator;
+use Volgodon\ClientControl\Platform;
 
 $assertions = 0;
 
@@ -92,6 +94,18 @@ function moduleState($enabled, $mode, $shapingMode = 'unlimited', $override = 'i
         'clients' => [$clientUuid => clientState($groupUuid, $override)],
     ];
 }
+
+$platform = Platform::featureMatrix();
+check(in_array($platform['filter_backend'], ['runtime_registry', 'persistent_model'], true),
+    'platform capabilities must select an explicit firewall backend');
+same($platform['filter_backend'] === 'persistent_model', $platform['packet_rate'],
+    'packet-rate support must be explicit in the platform matrix');
+$otherBackend = $platform['filter_backend'] === 'runtime_registry' ? 'persistent_model' : 'runtime_registry';
+$platformTransition = Platform::featureMatrix($otherBackend);
+same(true, $platformTransition['transition_pending'],
+    'a capability-driven firewall backend transition must be visible');
+check($platformTransition['warning'] !== '',
+    'a firewall backend transition must include an operator warning');
 
 function desiredFixture()
 {
@@ -204,14 +218,18 @@ check(!isset($packetRateRule['fields']['max-pkt-rate-number']),
     'portable managed rules must not use fields missing from the installed OPNsense model');
 check(strpos($packetRateRule['fields']['description'], 'packet_rate=120/3') !== false,
     'the managed-rule diff must expose the exact runtime packet-rate value');
+same('unsupported_packet_rate', $packetRateDesired['warnings'][0]['reason'] ?? '',
+    'an unsupported packet-rate limit must be an explicit plan conflict');
 $packetRateConfig = (new FirewallHook())->ruleConfig(
     $packetRateRule['fields'],
     $packetRateRule['core_name'],
     120,
     3
 );
-same('max-pkt-rate 120/3', $packetRateConfig['dn'],
-    'the early runtime rule must enforce the configured packet rate');
+same(true, $packetRateConfig['disabled'],
+    'an unsupported packet-rate rule must fail closed rather than silently ignore the limit');
+check(!isset($packetRateConfig['dn']),
+    'packet-rate limits must never be misrouted through the traffic-shaper dn field');
 same('$CC_G_111111111111', $packetRateConfig['from'],
     'the runtime rule must preserve the deterministic group alias');
 same(true, $packetRateConfig['quick'], 'the early runtime rule must stop later broad allow rules');
@@ -252,22 +270,55 @@ $scheduleConfig = (object)[
         ],
     ],
 ];
+$scheduleConfig->system = (object)['timezone' => 'Europe/Moscow'];
 $scheduleEvaluator = new ScheduleEvaluator();
+same('Europe/Moscow', $scheduleEvaluator->timezoneName($scheduleConfig),
+    'schedule evaluation must use the configured firewall timezone');
 same(true, $scheduleEvaluator->isActive(
     'WorkHours', new DateTimeImmutable('2026-08-31 09:00:00+03:00'), $scheduleConfig
 ), 'a weekly schedule must include its start time');
+same(true, $scheduleEvaluator->isActive(
+    'WorkHours', new DateTimeImmutable('2026-08-31 17:00:59+03:00'), $scheduleConfig
+), 'a weekly schedule must include every second of its ending minute');
 same(false, $scheduleEvaluator->isActive(
-    'WorkHours', new DateTimeImmutable('2026-08-31 17:00:01+03:00'), $scheduleConfig
-), 'a weekly schedule must expire immediately after its stop time');
+    'WorkHours', new DateTimeImmutable('2026-08-31 17:01:00+03:00'), $scheduleConfig
+), 'a weekly schedule must expire after its ending minute');
 same(true, $scheduleEvaluator->isActive(
     'Maintenance', new DateTimeImmutable('2026-08-31 23:00:00+03:00'), $scheduleConfig
 ), 'a calendar schedule must match its month and day');
 same(false, $scheduleEvaluator->isActive(
     'Missing', new DateTimeImmutable('2026-08-31 12:00:00+03:00'), $scheduleConfig
 ), 'a deleted schedule must fail closed');
+$endOfDayConfig = (object)[
+    'schedules' => (object)[
+        'schedule' => [(object)[
+            'name' => 'AllDay',
+            'timerange' => [(object)['position' => '1', 'hour' => '00:00-23:59']],
+        ]],
+    ],
+];
+same(true, $scheduleEvaluator->isActive(
+    'AllDay', new DateTimeImmutable('2026-08-31 23:59:59+03:00'), $endOfDayConfig
+), 'a 23:59 schedule boundary must include its final 59 seconds');
 same(true, $scheduleEvaluator->isActive(
     '', new DateTimeImmutable('2026-08-31 12:00:00+03:00'), $scheduleConfig
 ), 'an empty schedule must remain unrestricted');
+$missingScheduleState = moduleState(true, 'enforce', 'unlimited');
+$missingScheduleState['groups']['11111111-1111-4111-8111-111111111111']['schedule'] = 'Deleted';
+$missingScheduleState['groups']['11111111-1111-4111-8111-111111111111']['schedule_exists'] = false;
+$missingSchedule = $compiler->compileState($missingScheduleState);
+check(!isset($missingSchedule['filter_rules']['group:11111111-1111-4111-8111-111111111111:pass']),
+    'a deleted schedule must remove the affected group allow rule');
+check(isset($missingSchedule['filter_rules']['system:unknown-block']),
+    'a deleted schedule must preserve the default deny rule');
+same('missing_schedule', $missingSchedule['notices'][0]['reason'] ?? '',
+    'a deleted schedule must be an explicit fail-closed plan notice');
+$existingScheduleState = $missingScheduleState;
+$existingScheduleState['groups']['11111111-1111-4111-8111-111111111111']['schedule_exists'] = true;
+$existingSchedule = $compiler->compileState($existingScheduleState);
+same($existingSchedule['fingerprint'], $missingSchedule['fingerprint'],
+    'external schedule availability must not change the settings fingerprint');
+
 
 
 $shared = $compiler->compileState(moduleState(true, 'enforce', 'shared'));
@@ -287,6 +338,8 @@ $multiInterfaceState['general']['wan_interfaces'] = ['wan', 'wan2'];
 $multiInterface = $compiler->compileState($multiInterfaceState);
 same(8, count($multiInterface['shaper_rules']),
     'two protected and two WAN interfaces must compile both directions for all four paths');
+same(8, $multiInterface['forecast']['shaper_rules'],
+    'the plan forecast must expose the exact Traffic Shaper rule count');
 foreach (['wan', 'wan2'] as $wanInterface) {
     foreach (['iot', 'lan'] as $protectedInterface) {
         $path = $wanInterface . ':' . $protectedInterface;
@@ -309,8 +362,8 @@ foreach (['wan', 'wan2'] as $wanInterface) {
 $override = $compiler->compileState(moduleState(true, 'enforce', 'shared', 'limited'));
 check(isset($override['pipes']['client:22222222-2222-4222-8222-222222222222:download']),
     'limited client override must allocate its own pipe');
-check(strpos($override['aliases']['group:11111111-1111-4111-8111-111111111111:shaper']['fields']['content'],
-    'CC_C_222222222222_IP') === false, 'limited override must be excluded from the shared group shaper alias');
+check(!isset($override['aliases']['group:11111111-1111-4111-8111-111111111111:shaper']),
+    'the compiler must not create an unused group shaper alias');
 same('192.0.2.10,2001:db8::10',
     $override['shaper_rules']['client:22222222-2222-4222-8222-222222222222:download:wan:lan']['fields']['destination'],
     'limited client override must compile a literal-address download match');
@@ -330,6 +383,10 @@ $macState['clients']['22222222-2222-4222-8222-222222222222']['endpoints'][0]['re
 $unresolvedMac = $compiler->compileState($macState);
 same([], $unresolvedMac['pipes'], 'an unresolved MAC-only group must not create ineffective pipes');
 same([], $unresolvedMac['shaper_rules'], 'an unresolved MAC-only group must not create ineffective shaper rules');
+same($resolvedMac['fingerprint'], $unresolvedMac['fingerprint'],
+    'runtime MAC resolution must not change the configuration fingerprint');
+check($resolvedMac['runtime_fingerprint'] !== $unresolvedMac['runtime_fingerprint'],
+    'runtime MAC resolution must remain visible in the runtime fingerprint');
 
 $unlimited = $compiler->compileState(moduleState(true, 'enforce', 'unlimited'));
 same([], $unlimited['pipes'], 'unlimited groups must not compile pipes');
@@ -347,11 +404,54 @@ $disabledClient = $compiler->compileState($disabledState);
 same('', $disabledClient['aliases']['system:allowed']['fields']['content'],
     'disabled clients must not be members of CC_ALLOWED');
 
+$orphanedState = moduleState(true, 'enforce', 'unlimited');
+$orphanedState['clients']['22222222-2222-4222-8222-222222222222']['group'] = '';
+$orphanedDesired = $compiler->compileState($orphanedState);
+check(isset($orphanedDesired['filter_rules']['system:unknown-block']),
+    'an orphaned client must not prevent compilation of the default deny rule');
+same([], array_filter($orphanedDesired['aliases'], function ($object) {
+    return ($object['owner_type'] ?? '') === 'client';
+}), 'an orphaned client must be excluded from compiled objects');
+same('missing_group', $orphanedDesired['warnings'][0]['reason'] ?? '',
+    'an orphaned client must produce an explicit plan warning');
+$orphanedPlan = (new Planner())->build($orphanedDesired, [
+    'by_uuid' => [], 'by_name' => [], 'owned' => [],
+], [], 'fail');
+same('conflict', $orphanedPlan['status'],
+    'an orphaned client warning must block apply without removing runtime guards');
+
+
 $planner = new Planner();
 $desired = desiredFixture();
 $emptyActual = ['by_uuid' => [], 'by_name' => [], 'owned' => []];
 $createPlan = $planner->build($desired, $emptyActual, [], 'fail');
 same('create', $createPlan['operations'][0]['action'], 'missing desired object must be created');
+$ownedObjects = [];
+foreach (['category', 'alias', 'pipe', 'shaper_rule', 'filter_rule'] as $index => $coreType) {
+    $fields = ['name' => 'CC_DELETE_' . $index];
+    $ownedObjects[] = [
+        'identity' => $coreType . ':00000000-0000-4000-8000-' . str_pad((string)$index, 12, '0', STR_PAD_LEFT),
+        'core_type' => $coreType,
+        'core_uuid' => '00000000-0000-4000-8000-' . str_pad((string)$index, 12, '0', STR_PAD_LEFT),
+        'core_name' => 'CC_DELETE_' . $index,
+        'fields' => $fields,
+        'allocation' => [],
+        'semantic_fingerprint' => Canonical::fingerprint($fields),
+        'full_fingerprint' => Canonical::fingerprint(['fields' => $fields, 'allocation' => []]),
+        'owned' => true,
+        'ownership_intact' => true,
+    ];
+}
+$deletePlan = $planner->build([
+    'categories' => [], 'aliases' => [], 'filter_rules' => [],
+    'pipes' => [], 'shaper_rules' => [], 'fingerprint' => '',
+], ['by_uuid' => [], 'by_name' => [], 'owned' => $ownedObjects], [], 'fail');
+same(
+    ['filter_rule', 'shaper_rule', 'pipe', 'alias', 'category'],
+    array_column($deletePlan['operations'], 'core_type'),
+    'managed objects must be deleted in reverse dependency order'
+);
+
 
 $actual = actualFixture();
 $managed = managedFixture($actual['snapshot']['full_fingerprint']);
@@ -422,6 +522,52 @@ check(
     !in_array('general.stale_neighbor_policy', $generalFieldIds, true),
     'the fixed stale-neighbor policy must not be serialized as an editable settings field'
 );
+
+$acl = simplexml_load_file(
+    __DIR__ . '/../src/opnsense/mvc/app/models/Volgodon/ClientControl/ACL/ACL.xml'
+);
+check($acl !== false, 'the Client Control ACL must be valid XML');
+$aclPatterns = ['clientcontrol-view' => [], 'clientcontrol-manage' => []];
+foreach ($aclPatterns as $privilege => &$patterns) {
+    foreach ($acl->$privilege->patterns->pattern as $pattern) {
+        $patterns[] = (string)$pattern;
+    }
+}
+unset($patterns);
+$mutationPrefixes = ['add', 'set', 'del', 'toggle', 'bulk', 'copy', 'apply', 'reconcile'];
+$apiControllerRoot = __DIR__ . '/../src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api';
+foreach (glob($apiControllerRoot . '/*Controller.php') as $controllerFile) {
+    if (basename($controllerFile) === 'ClientControlControllerBase.php') {
+        continue;
+    }
+    $controller = strtolower(preg_replace('/Controller\.php$/', '', basename($controllerFile)));
+    preg_match_all('/public\s+function\s+([A-Za-z0-9_]+)Action\s*\(/', file_get_contents($controllerFile), $actions);
+    foreach ($actions[1] as $method) {
+        $action = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $method));
+        $route = 'api/clientcontrol/' . $controller . '/' . $action;
+        $isMutation = false;
+        foreach ($mutationPrefixes as $prefix) {
+            if ($action === $prefix || str_starts_with($action, $prefix . '_')) {
+                $isMutation = true;
+                break;
+            }
+        }
+        foreach ($aclPatterns as $privilege => $patterns) {
+            $covered = false;
+            foreach ($patterns as $pattern) {
+                if (fnmatch($pattern, $route)) {
+                    $covered = true;
+                    break;
+                }
+            }
+            if ($isMutation && $privilege === 'clientcontrol-view') {
+                same(false, $covered, 'read-only ACL must not cover mutation route ' . $route);
+            } else {
+                check($covered, $privilege . ' ACL must cover route ' . $route);
+            }
+        }
+    }
+}
 
 require __DIR__ . '/controller-load.php';
 

@@ -4,6 +4,6 @@ set -eu
 rm -f /var/run/clientcontrol-uninstalling \
     /var/run/clientcontrol-schedule.json \
     /var/run/clientcontrol-schedule.lock \
-    /var/lib/php/cache/_usr_local_opnsense_mvc_app_views_volgodon_clientcontrol_index.volt.php
+    /var/lib/php/cache/*volgodon_clientcontrol*.volt.php
 configctl filter reload >/dev/null 2>&1 || :
 configctl cron restart >/dev/null 2>&1 || :

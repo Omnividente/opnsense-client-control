@@ -80,7 +80,7 @@ abstract class ClientControlControllerBase extends ApiMutableModelControllerBase
         $previousRevision = ((int) (string) $model->general->revision);
         $model->general->revision = (string)(((int) (string) $model->general->revision) + 1);
         $model->appendAudit($this->getUserName(), $operation, $summary);
-        $validation = $this->validate(null, null, true);
+        $validation = $this->validate(null, null, false);
         if (!empty($validation['validations'])) {
             $model->general->revision = (string)$previousRevision;
             $this->invalidateModel();

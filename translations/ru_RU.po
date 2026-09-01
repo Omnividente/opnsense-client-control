@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: os-client-control 1.0\n"
+"Project-Id-Version: os-client-control 1.1\n"
 "Report-Msgid-Bugs-To: admin@volgodon.ru\n"
-"POT-Creation-Date: 2026-08-21 00:00+0300\n"
-"PO-Revision-Date: 2026-08-21 00:00+0300\n"
+"POT-Creation-Date: 2026-09-01 00:00+0300\n"
+"PO-Revision-Date: 2026-09-01 00:00+0300\n"
 "Last-Translator: VOLGODON <admin@volgodon.ru>\n"
 "Language-Team: Russian\n"
 "Language: ru_RU\n"
@@ -1920,3 +1920,144 @@ msgstr "Без расписания"
 
 msgid "Settings are already active"
 msgstr "Настройки уже действуют"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/GroupsController.php
+#, php-format
+msgid "%s must be a whole number from 0 through %d."
+msgstr "Поле %s должно быть целым числом от 0 до %d."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php
+msgid "Compatibility firewall backend is active because the persistent filter model lacks a required capability."
+msgstr "Используется совместимый backend межсетевого экрана: в постоянной модели фильтра отсутствует необходимая возможность."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Export JSON"
+msgstr "Экспорт JSON"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php
+#, php-format
+msgid "Firewall backend capability changed from %s to %s. Review and apply the current plan before relying on the new backend."
+msgstr "Возможности backend межсетевого экрана изменились с %s на %s. Проверьте и примените текущий план, прежде чем полагаться на новый backend."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+#, php-format
+msgid "Group %s is fail-closed because schedule %s no longer exists."
+msgstr "Группа %s закрыта по безопасному сценарию, потому что расписание %s больше не существует."
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/FieldTypes/DestinationAliasField.php
+#, php-format
+msgid "Missing alias: %s"
+msgstr "Отсутствующий псевдоним: %s"
+
+#: src/opnsense/mvc/app/models/Volgodon/ClientControl/FieldTypes/ScheduleField.php
+#, php-format
+msgid "Missing schedule: %s"
+msgstr "Отсутствующее расписание: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Output truncated."
+msgstr "Вывод сокращён."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The plan table is truncated to protect browser responsiveness."
+msgstr "Таблица плана сокращена, чтобы интерфейс браузера оставался отзывчивым."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Aliases were imported as disabled clients. Source aliases were not modified."
+msgstr "Псевдонимы импортированы как отключённые клиенты. Исходные псевдонимы не изменены."
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+#, php-format
+msgid "Client %s was excluded from policy compilation because its group is missing."
+msgstr "Клиент %s исключён из компиляции политики, потому что его группа отсутствует."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Client %s was skipped because its target group is unavailable."
+msgstr "Клиент %s пропущен, потому что целевая группа недоступна."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Connection counters are truncated at the firewall query limit."
+msgstr "Счётчики соединений сокращены на пределе запроса межсетевого экрана."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Create a group before adding clients."
+msgstr "Сначала создайте группу."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "Disable the client before removing its last endpoint."
+msgstr "Отключите клиента перед удалением его последнего адреса."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Existing group %s will be reused without changing its policy."
+msgstr "Существующая группа %s будет использована повторно без изменения её политики."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Group %s already exists; explicitly allow reuse or rename it before import."
+msgstr "Группа %s уже существует; явно разрешите повторное использование или переименуйте её перед импортом."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+#, php-format
+msgid "Network alias %s cannot be imported as a client endpoint."
+msgstr "Сетевой псевдоним %s нельзя импортировать как адрес клиента."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Network aliases contain subnets, but client endpoints require individual IP addresses."
+msgstr "Сетевые псевдонимы содержат подсети, а для адресов клиентов нужны отдельные IP-адреса."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ImportController.php
+msgid "No valid aliases remain to import."
+msgstr "Не осталось подходящих псевдонимов для импорта."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Reuse an existing group with the same name without changing its policy"
+msgstr "Использовать существующую группу с тем же именем без изменения её политики"
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientsController.php
+msgid "Select an existing group for this client."
+msgstr "Выберите существующую группу для этого клиента."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Skipped aliases"
+msgstr "Пропущенные псевдонимы"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+#, php-format
+msgid "This plan creates %d Traffic Shaper rules; review interface and policy combinations."
+msgstr "Этот план создаёт %d правил Traffic Shaper; проверьте сочетания интерфейсов и политик."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Traffic Shaper rules"
+msgstr "Правила Traffic Shaper"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Warning"
+msgstr "Предупреждение"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Will be imported as disabled"
+msgstr "Будут импортированы отключёнными"
+
+#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Compiler.php
+#, php-format
+msgid "Group %s is fail-closed because this firewall backend does not support packet-rate limits."
+msgstr "Группа %s закрыта по безопасному сценарию, потому что этот backend межсетевого экрана не поддерживает ограничение скорости пакетов."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+#, php-format
+msgid "Firewall reload failed: %s"
+msgstr "Сбой перезагрузки межсетевого экрана: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Managed objects have not been deeply checked in this browser session."
+msgstr "В этой сессии браузера управляемые объекты ещё не проходили глубокую проверку."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Run deep check"
+msgstr "Запустить глубокую проверку"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The latest deep check found no managed-object conflicts."
+msgstr "Последняя глубокая проверка не обнаружила конфликтов управляемых объектов."
