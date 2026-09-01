@@ -80,6 +80,31 @@ class AuditLog
     }
 
     /**
+     * Verify that the current process can read, lock, and append to storage.
+     */
+    public function probe()
+    {
+        $this->ensureStorage();
+        $handle = @fopen($this->path, 'c+b');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to open the Client Control audit log for reading and writing.');
+        }
+        if (!flock($handle, LOCK_EX)) {
+            fclose($handle);
+            throw new RuntimeException('Unable to lock the Client Control audit log.');
+        }
+        try {
+            if (!fflush($handle)) {
+                throw new RuntimeException('Unable to flush the Client Control audit log.');
+            }
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+        return true;
+    }
+
+    /**
      * Combine retained config records with the longer file-backed history.
      */
     public function merge(array $configRecords)

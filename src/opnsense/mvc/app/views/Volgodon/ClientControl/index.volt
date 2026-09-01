@@ -27,7 +27,9 @@ $(document).ready(function () {
         lastPlan: null,
         deepCheckRevision: null,
         hasGroups: false,
-        importPreview: null
+        importPreview: null,
+        auditLogDegraded: false,
+        auditLogMessage: ''
     };
 
     const policyLabels = {
@@ -232,6 +234,17 @@ $(document).ready(function () {
             .addClass('alert-' + kind)
             .text(message)
             .show();
+    }
+
+    function updateAuditLogStatus(data) {
+        if (data && data.audit_log === 'degraded') {
+            state.auditLogDegraded = true;
+            state.auditLogMessage = data.audit_log_message || '{{ lang._('The full audit history is unavailable. Only the bounded config.xml history is available.') }}';
+        }
+        $('#cc-audit-warning')
+            .toggle(state.auditLogDegraded)
+            .text(state.auditLogMessage);
+        return state.auditLogDegraded;
     }
 
     function apiError(xhr) {
@@ -481,12 +494,13 @@ $(document).ready(function () {
             setBanner('danger', (data && (data.errorMessage || data.message)) || '{{ lang._('Request failed.') }}');
             return false;
         }
+        updateAuditLogStatus(data);
         if (data.revision !== undefined) {
             state.revision = Number(data.revision);
         }
         reloadAllGrids();
         refreshGroupSelectors();
-        markDirty();
+        markDirty(data.audit_log === 'degraded' ? data.audit_log_message : null);
         return true;
     }
 
@@ -510,6 +524,7 @@ $(document).ready(function () {
 
     function refreshStatus() {
         getJson('/api/clientcontrol/service/status').done(function (data) {
+            updateAuditLogStatus(data);
             state.revision = Number(data.revision || 0);
             $('#cc-revision').text(data.revision);
             $('#cc-applied-revision').text(data.last_applied_revision);
@@ -831,7 +846,12 @@ $(document).ready(function () {
                     state.lastPlan = null;
                     state.deepCheckRevision = Number(data.revision);
                     $('#apply-plan').prop('disabled', true);
-                    setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
+                    updateAuditLogStatus(data);
+                    if (data.audit_log === 'degraded') {
+                        setBanner('warning', data.audit_log_message);
+                    } else {
+                        setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
+                    }
                     setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
                     $('#plan-json').text(renderTechnicalPlan(data));
                     refreshStatus();
@@ -949,6 +969,7 @@ $(document).ready(function () {
             current: 1,
             sort: {timestamp: 'desc'}
         }).done(function (data) {
+            updateAuditLogStatus(data);
             const tbody = $('#audit-rows').empty();
             (data.rows || []).forEach(function (entry) {
                 const tr = $('<tr/>');
@@ -964,6 +985,7 @@ $(document).ready(function () {
 
     $('#export-audit').click(function () {
         getJson('/api/clientcontrol/diagnostics/audit_export').done(function (data) {
+            updateAuditLogStatus(data);
             downloadJson('client-control-audit.json', data);
         });
     });
@@ -998,6 +1020,7 @@ $(document).ready(function () {
     <span class="text-muted" id="cc-last-message"></span>
 </div>
 <div id="cc-platform-warning" class="alert alert-warning" style="display:none"></div>
+<div id="cc-audit-warning" class="alert alert-warning" style="display:none"></div>
 <div id="cc-deep-check" class="alert alert-warning clearfix" style="display:none">
     <span id="cc-deep-check-message"></span>
     <button id="run-deep-check" type="button" class="btn btn-default btn-xs pull-right"><i class="fa fa-search"></i> {{ lang._('Run deep check') }}</button>

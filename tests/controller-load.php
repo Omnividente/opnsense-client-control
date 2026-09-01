@@ -132,6 +132,13 @@ if (is_file('/usr/local/etc/inc/config.inc')) {
     };
     $serviceReflection = new ReflectionClass(Volgodon\ClientControl\Api\ServiceController::class);
     $serviceController = $serviceReflection->newInstanceWithoutConstructor();
+    $auditLogResponse = $serviceReflection->getMethod('auditLogResponse');
+    $auditLogResponse->setAccessible(true);
+    $degradedAudit = $auditLogResponse->invoke($serviceController, false, 'audit unavailable');
+    same('degraded', $degradedAudit['audit_log'],
+        'a committed mutation must expose external audit degradation in its response');
+    same('audit unavailable', $degradedAudit['audit_log_message'],
+        'the audit degradation response must carry an operator-visible explanation');
     $reloadRuntime = $serviceReflection->getMethod('reloadRuntime');
     $reloadRuntime->setAccessible(true);
     $backend = $fakeBackend();

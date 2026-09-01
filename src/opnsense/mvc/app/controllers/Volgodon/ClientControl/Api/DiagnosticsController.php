@@ -165,8 +165,9 @@ class DiagnosticsController extends ClientControlControllerBase
 
     public function auditAction()
     {
+        $audit = $this->auditRecords($this->getModel());
         $records = [];
-        foreach ($this->auditRecords($this->getModel()) as $entry) {
+        foreach ($audit['records'] as $entry) {
             $records[] = [
                 'uuid' => $entry['uuid'],
                 'timestamp' => $entry['timestamp'],
@@ -176,22 +177,26 @@ class DiagnosticsController extends ClientControlControllerBase
                 'result' => $entry['result'],
             ];
         }
-        return $this->searchRecordsetBase($records, null, 'timestamp', null, SORT_NATURAL | SORT_FLAG_CASE);
+        return array_merge(
+            $this->searchRecordsetBase($records, null, 'timestamp', null, SORT_NATURAL | SORT_FLAG_CASE),
+            $this->auditLogResponse($audit['audit_log'] === 'ok', $audit['audit_log_message'])
+        );
     }
 
     public function auditExportAction()
     {
         $model = $this->getModel();
-        $records = $this->auditRecords($model);
+        $audit = $this->auditRecords($model);
+        $records = $audit['records'];
         usort($records, function ($left, $right) {
             return [$left['timestamp'], $left['uuid']] <=> [$right['timestamp'], $right['uuid']];
         });
-        return [
+        return array_merge([
             'format' => 'client-control-audit-v1',
             'generated_at' => gmdate('c'),
             'rows' => $records,
             'revision' => (int)(string)$model->general->revision,
-        ];
+        ], $this->auditLogResponse($audit['audit_log'] === 'ok', $audit['audit_log_message']));
     }
 
     private function auditRecords($model)
@@ -208,12 +213,23 @@ class DiagnosticsController extends ClientControlControllerBase
             ];
         }
         try {
-            return (new AuditLog())->merge($configRecords);
+            $auditLog = new AuditLog();
+            $auditLog->probe();
+            return array_merge(
+                ['records' => $auditLog->merge($configRecords)],
+                $this->auditLogResponse(true)
+            );
         } catch (\Throwable $error) {
             $this->getLogger('clientcontrol')->error(
                 'Unable to read Client Control audit history: ' . $error->getMessage()
             );
-            return $configRecords;
+            return array_merge(
+                ['records' => $configRecords],
+                $this->auditLogResponse(
+                    false,
+                    gettext('The full audit history is unavailable. Only the bounded config.xml history is shown and exported.')
+                )
+            );
         }
     }
 
