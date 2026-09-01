@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-rm -f /var/run/clientcontrol-uninstalling \
+rm -f /etc/newsyslog.conf.d/clientcontrol \
+    /var/run/clientcontrol-uninstalling \
     /var/run/clientcontrol-schedule.json \
     /var/run/clientcontrol-schedule.lock \
     /var/lib/php/cache/*volgodon_clientcontrol*.volt.php

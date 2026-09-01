@@ -2069,3 +2069,24 @@ msgstr "Запустить глубокую проверку"
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
 msgid "The latest deep check found no managed-object conflicts."
 msgstr "Последняя глубокая проверка не обнаружила конфликтов управляемых объектов."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
+msgid "The saved change is active, but the full audit history could not be written. Only the bounded config.xml history is available."
+msgstr "Сохранённое изменение действует, но записать полный журнал аудита не удалось. Доступна только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The full audit history is unavailable. Only the bounded config.xml history is available."
+msgstr "Полный журнал аудита недоступен. Доступна только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "The applied change is active, but the full audit history could not be written. Only the bounded config.xml history is available."
+msgstr "Применённое изменение действует, но записать полный журнал аудита не удалось. Доступна только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "The change was rolled back, but the full audit history could not be written. Only the bounded config.xml history is available."
+msgstr "Изменение отменено, но записать полный журнал аудита не удалось. Доступна только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/DiagnosticsController.php
+msgid "The full audit history is unavailable. Only the bounded config.xml history is shown and exported."
+msgstr "Полный журнал аудита недоступен. На экране и в экспорте показана только ограниченная история из config.xml."

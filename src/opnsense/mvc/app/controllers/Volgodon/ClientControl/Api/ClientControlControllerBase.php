@@ -10,6 +10,7 @@ namespace Volgodon\ClientControl\Api;
 use OPNsense\Base\ApiMutableModelControllerBase;
 use OPNsense\Base\UserException;
 use OPNsense\Core\Config;
+use Volgodon\ClientControl\AuditLog;
 use Volgodon\ClientControl\ClientControl;
 use Volgodon\ClientControl\Translations;
 
@@ -96,11 +97,38 @@ abstract class ClientControlControllerBase extends ApiMutableModelControllerBase
             parent::setSaveAuditMessage(sprintf('Client Control: %s', $summary));
         }
         $this->save(false, true);
-        $model->flushAuditLog();
+        $auditLog = $this->auditLogResponse(
+            $model->flushAuditLog(),
+            gettext('The saved change is active, but the full audit history could not be written. Only the bounded config.xml history is available.')
+        );
         return array_merge([
             'result' => 'saved',
             'revision' => ((int) (string) $model->general->revision),
-        ], $extra);
+        ], $auditLog, $extra);
+    }
+
+    protected function auditLogAvailability()
+    {
+        try {
+            (new AuditLog())->probe();
+            return $this->auditLogResponse(true);
+        } catch (\Throwable $error) {
+            $this->getLogger('clientcontrol')->error(
+                'Client Control audit log is unavailable: ' . $error->getMessage()
+            );
+            return $this->auditLogResponse(
+                false,
+                gettext('The full audit history is unavailable. Only the bounded config.xml history is available.')
+            );
+        }
+    }
+
+    protected function auditLogResponse($available, $message = '')
+    {
+        return [
+            'audit_log' => $available ? 'ok' : 'degraded',
+            'audit_log_message' => $available ? '' : (string)$message,
+        ];
     }
 
     protected function searchRecordsetBase(

@@ -120,15 +120,25 @@ class ServiceController extends ClientControlControllerBase
 
             $runtime = $this->reloadRuntime($flushIpFw, $model);
             $verified = $this->verifyAppliedState($model, $reconciler->getResolvedMacs());
-            $model->flushAuditLog();
+            $auditLog = $this->auditLogResponse(
+                $model->flushAuditLog(),
+                gettext('The applied change is active, but the full audit history could not be written. Only the bounded config.xml history is available.')
+            );
             $verified['runtime'] = $runtime;
             $verified['plan'] = $plan;
             $verified['result'] = 'applied';
-            return $verified;
+            return array_merge($verified, $auditLog);
         } catch (\Throwable $error) {
             $this->unlockModel();
+            $rollbackAuditAvailable = true;
             if ($mutating && $backup !== null) {
-                $this->rollback($backup, $error);
+                $rollbackAuditAvailable = $this->rollback($backup, $error);
+            }
+            if (!$rollbackAuditAvailable) {
+                throw new UserException(
+                    $error->getMessage() . ' ' . gettext('The change was rolled back, but the full audit history could not be written. Only the bounded config.xml history is available.'),
+                    gettext('Client Control')
+                );
             }
             throw $error;
         } finally {
@@ -153,7 +163,8 @@ class ServiceController extends ClientControlControllerBase
             ksort($counts, SORT_STRING);
             $syncState = $model->getSyncState();
             $platform = Platform::featureMatrix((string)$model->general->applied_filter_backend);
-            return [
+            $auditLog = $this->auditLogAvailability();
+            return array_merge([
                 'status' => (string)$model->general->last_apply_status,
                 'sync_state' => $syncState,
                 'revision' => (int)(string)$model->general->revision,
@@ -165,7 +176,7 @@ class ServiceController extends ClientControlControllerBase
                 'conflicts' => [],
                 'deep_check_required' => true,
                 'platform' => $platform,
-            ];
+            ], $auditLog);
         } finally {
             $this->unlockModel();
         }
@@ -273,6 +284,7 @@ class ServiceController extends ClientControlControllerBase
 
     private function rollback($backup, $error)
     {
+        $auditLogAvailable = true;
         $rollbackError = null;
         // TING restoreBackup() opens and locks a second config descriptor; release our transaction lock first.
         Config::getInstance()->unlock();
@@ -299,7 +311,7 @@ class ServiceController extends ClientControlControllerBase
             $model->appendAudit($this->getUserName(), 'service.rollback', $fullMessage, 'error');
             $model->serializeToConfig(false, true);
             Config::getInstance()->save(['description' => 'Client Control apply rollback']);
-            $model->flushAuditLog();
+            $auditLogAvailable = $model->flushAuditLog();
         } catch (\Throwable $statusError) {
             $this->getLogger('clientcontrol')->error('Unable to record rollback status: ' . $statusError->getMessage());
         } finally {
@@ -310,6 +322,7 @@ class ServiceController extends ClientControlControllerBase
         } else {
             $this->getLogger('clientcontrol')->error('Client Control apply rolled back: ' . $error->getMessage());
         }
+        return $auditLogAvailable;
     }
 
     private function modelValidation($model)

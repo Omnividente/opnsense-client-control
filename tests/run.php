@@ -61,6 +61,7 @@ try {
         'result' => 'error',
     ];
     $auditLog->append([$auditRecord]);
+    check($auditLog->probe(), 'audit storage health must verify readable and writable storage');
     same($longSummary, $auditLog->read()[0]['summary'],
         'the external audit log must preserve the complete summary');
     $auditLog->append([$auditRecord], true);
@@ -83,12 +84,26 @@ try {
     $compactSummary = AuditLog::compactSummary($longSummary);
     check(strlen($compactSummary) <= 255, 'the config audit fallback must remain bounded');
     check(str_ends_with($compactSummary, '...'), 'a truncated config summary must carry a marker');
+    file_put_contents($auditTemp . '/not-a-directory', 'blocked');
+    $probeFailed = false;
+    try {
+        (new AuditLog($auditTemp . '/not-a-directory/audit.log'))->probe();
+    } catch (RuntimeException $error) {
+        $probeFailed = true;
+    }
+    check($probeFailed, 'audit storage health must fail instead of reporting an unavailable path as healthy');
 } finally {
     foreach (glob($auditTemp . '/*') ?: [] as $auditFile) {
         unlink($auditFile);
     }
     rmdir($auditTemp);
 }
+
+$postDeinstall = file_get_contents(__DIR__ . '/../+POST_DEINSTALL.post');
+check(
+    str_contains($postDeinstall, '/etc/newsyslog.conf.d/clientcontrol'),
+    'package uninstall must remove the generated newsyslog entry while preserving audit files'
+);
 
 function groupState($mode = 'unlimited')
 {
