@@ -18,7 +18,6 @@ class SettingsController extends ClientControlControllerBase
         'enforcement_mode',
         'destination_scope',
         'destination_alias',
-        'stale_neighbor_policy',
     ];
 
     public function getAction()

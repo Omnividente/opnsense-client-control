@@ -39,4 +39,10 @@ if (is_file('/usr/local/etc/inc/config.inc')) {
     foreach (['name', 'group', 'endpoints_text', 'enabled'] as $column) {
         check(in_array($column, $clientColumns, true), 'the client grid must expose column ' . $column);
     }
+    $settingsReflection = new ReflectionClass(Volgodon\ClientControl\Api\SettingsController::class);
+    $editableSettings = $settingsReflection->getReflectionConstant('EDITABLE_FIELDS')->getValue();
+    check(
+        !in_array('stale_neighbor_policy', $editableSettings, true),
+        'the fixed stale-neighbor policy must not be mutable through the settings API'
+    );
 }
