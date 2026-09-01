@@ -592,10 +592,12 @@ $(document).ready(function () {
         const hasChanges = (plan.operations || []).some(function (operation) {
             return operation.action !== 'noop';
         });
+        const resultLabel = plan.status === 'ok' && !hasChanges
+            ? '{{ lang._('Settings are already active') }}'
+            : translatedLabel(planStatusLabels, plan.status);
         $('#plan-summary').text(
             '{{ lang._('Settings version') }}: ' + plan.revision + ' · ' +
-            '{{ lang._('Result') }}: ' + (hasChanges ?
-                translatedLabel(planStatusLabels, plan.status) : '{{ lang._('Settings are already active') }}')
+            '{{ lang._('Result') }}: ' + resultLabel
         );
         const tbody = $('#plan-rows').empty();
         (plan.operations || []).forEach(function (operation) {
