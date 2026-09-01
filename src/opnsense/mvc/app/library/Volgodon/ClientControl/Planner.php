@@ -16,7 +16,7 @@ class Planner
         }
         $desiredObjects = $this->flattenDesired($desired);
         $operations = [];
-        $conflicts = [];
+        $conflicts = array_values(array_filter($desired['warnings'] ?? [], 'is_array'));
         $matchedActual = [];
         $matchedManaged = [];
 
@@ -167,9 +167,13 @@ class Planner
                 'shaper_rule' => 30,
                 'filter_rule' => 40,
             ];
-            $actionWeights = ['delete' => 90, 'drop_record' => 95, 'noop' => 60];
-            $leftWeight = $actionWeights[$left['action']] ?? ($weights[$left['core_type']] ?? 80);
-            $rightWeight = $actionWeights[$right['action']] ?? ($weights[$right['core_type']] ?? 80);
+            $actionWeights = ['drop_record' => 110, 'noop' => 105];
+            $leftWeight = $left['action'] === 'delete'
+                ? 100 - ($weights[$left['core_type']] ?? 0)
+                : ($actionWeights[$left['action']] ?? ($weights[$left['core_type']] ?? 80));
+            $rightWeight = $right['action'] === 'delete'
+                ? 100 - ($weights[$right['core_type']] ?? 0)
+                : ($actionWeights[$right['action']] ?? ($weights[$right['core_type']] ?? 80));
             return [$leftWeight, $left['identity']] <=> [$rightWeight, $right['identity']];
         });
 
@@ -182,6 +186,9 @@ class Planner
             'status' => empty($conflicts) ? 'ok' : 'conflict',
             'strategy' => $strategy,
             'desired_fingerprint' => $desired['fingerprint'] ?? '',
+            'runtime_fingerprint' => $desired['runtime_fingerprint'] ?? '',
+            'forecast' => $desired['forecast'] ?? [],
+            'notices' => array_values(array_filter($desired['notices'] ?? [], 'is_array')),
             'counts' => $counts,
             'operations' => $operations,
             'conflicts' => $conflicts,

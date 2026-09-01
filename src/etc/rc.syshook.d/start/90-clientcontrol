@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Recreate the volatile schedule snapshot before the first cron interval.
+if ! /usr/local/sbin/configctl -q clientcontrol schedule >/dev/null 2>&1; then
+    logger -t clientcontrol 'unable to restore runtime schedule state during startup'
+fi

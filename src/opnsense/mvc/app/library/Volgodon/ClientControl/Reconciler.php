@@ -26,17 +26,21 @@ class Reconciler
     private $aliasModel;
     private $filterModel;
     private $shaperModel;
+    private $resolvedMacs;
 
-    public function __construct($model, $compiler = null, $planner = null)
+    public function __construct($model, $compiler = null, $planner = null, $resolvedMacs = null)
     {
         $this->model = $model;
         $this->compiler = $compiler ?? new Compiler();
         $this->planner = $planner ?? new Planner();
+        $this->resolvedMacs = is_array($resolvedMacs) ? $resolvedMacs : null;
     }
 
     public function plan($strategy = 'fail')
     {
-        $this->desired = $this->compiler->compile($this->model, $this->resolvedMacAddresses());
+        $resolvedMacs = $this->resolvedMacs ?? $this->resolvedMacAddresses();
+        $this->resolvedMacs = $resolvedMacs;
+        $this->desired = $this->compiler->compile($this->model, $resolvedMacs);
         $managed = $this->snapshotManaged();
         $raw = $this->collectRawObjects($managed);
         $this->allocateDesired($this->desired, $raw, $managed);
@@ -44,6 +48,7 @@ class Reconciler
         $plan = $this->planner->build($this->desired, $actual, $managed, $strategy);
         $plan['revision'] = ((int) (string) $this->model->general->revision);
         $plan['mode'] = (string)$this->model->general->enforcement_mode;
+        $plan['notices'] = $this->desired['notices'] ?? [];
         $plan['plan_fingerprint'] = Canonical::fingerprint([
             'revision' => $plan['revision'],
             'mode' => $plan['mode'],
@@ -54,9 +59,9 @@ class Reconciler
         return $plan;
     }
 
-    public function apply($strategy = 'fail')
+    public function apply($strategy = 'fail', $plan = null)
     {
-        $plan = $this->plan($strategy);
+        $plan = is_array($plan) ? $plan : $this->plan($strategy);
         if ($plan['status'] !== 'ok') {
             throw new UserException(
                 gettext('Managed objects contain conflicts. Resolve them or explicitly restore module state.'),
@@ -64,10 +69,22 @@ class Reconciler
             );
         }
 
-        $this->applyCategory($plan['operations']);
-        $this->applyAliases($plan['operations']);
-        $this->applyShaper($plan['operations']);
-        $this->applyFilter($plan['operations']);
+        $upserts = array_values(array_filter(
+            $plan['operations'],
+            fn($operation) => in_array($operation['action'], ['create', 'update'], true)
+        ));
+        $deletes = array_values(array_filter(
+            $plan['operations'],
+            fn($operation) => $operation['action'] === 'delete'
+        ));
+        $this->applyCategory($upserts);
+        $this->applyAliases($upserts);
+        $this->applyShaper($upserts);
+        $this->applyFilter($upserts);
+        $this->applyFilter($deletes);
+        $this->applyShaper($deletes);
+        $this->applyAliases($deletes);
+        $this->applyCategory($deletes);
         $this->syncManagedRecords($plan);
         $this->assertValid($this->model, 'Client Control');
         return $plan;
@@ -77,6 +94,11 @@ class Reconciler
     {
         return $this->desired;
     }
+    public function getResolvedMacs()
+    {
+        return $this->resolvedMacs ?? [];
+    }
+
 
     private function applyCategory($operations)
     {

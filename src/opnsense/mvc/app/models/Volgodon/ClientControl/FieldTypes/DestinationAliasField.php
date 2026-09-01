@@ -8,25 +8,25 @@
 namespace Volgodon\ClientControl\FieldTypes;
 
 use OPNsense\Base\FieldTypes\BaseListField;
-use OPNsense\Core\Config;
+use OPNsense\Firewall\Alias;
 
-final class ScheduleField extends BaseListField
+final class DestinationAliasField extends BaseListField
 {
     protected function actionPostLoadingEvent()
     {
         $options = [];
-        $config = Config::getInstance()->object();
-        if (isset($config->schedules->schedule)) {
-            foreach ($config->schedules->schedule as $schedule) {
-                $name = trim((string)$schedule->name);
-                if ($name !== '') {
-                    $options[$name] = $name;
-                }
+        $aliasModel = new Alias();
+        foreach ($aliasModel->aliases->alias->iterateItems() as $alias) {
+            $type = (string)$alias->type;
+            $name = trim((string)$alias->name);
+            if ($name !== '' && !in_array($type, ['port', 'urltable_ports'], true) &&
+                !str_starts_with($name, 'CC_')) {
+                $options[$name] = $name;
             }
         }
         $current = trim((string)$this);
         if ($current !== '' && !isset($options[$current])) {
-            $options[$current] = sprintf(gettext('Missing schedule: %s'), $current);
+            $options[$current] = sprintf(gettext('Missing alias: %s'), $current);
         }
         ksort($options, SORT_NATURAL | SORT_FLAG_CASE);
         $this->internalOptionList = $options;

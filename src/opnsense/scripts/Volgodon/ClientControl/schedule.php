@@ -18,6 +18,9 @@ try {
     $previous = $runtime->load();
     $current = $runtime->current(new ClientControl());
     if (Canonical::encode($previous) === Canonical::encode($current)) {
+        if (!file_exists(RuntimeSchedule::STATE_FILE)) {
+            $runtime->save($current);
+        }
         echo json_encode(['status' => 'ok', 'changed' => false], JSON_UNESCAPED_SLASHES) . PHP_EOL;
         exit(0);
     }

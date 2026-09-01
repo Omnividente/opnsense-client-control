@@ -16,17 +16,6 @@
     .cc-section-intro { margin: 0 0 14px; color: #555; }
     .cc-technical { margin-top: 14px; }
     .cc-summary-counts { font-size: 15px; margin-bottom: 10px; }
-    tr[id="row_general.revision"],
-    tr[id="row_group.members"],
-    tr[id="row_group.sync_state"],
-    tr[id="row_client.endpoints_text"],
-    tr[id="row_client.access"],
-    tr[id="row_client.download"],
-    tr[id="row_client.upload"],
-    tr[id="row_client.metric"],
-    tr[id="row_client.online"],
-    tr[id="row_client.state_count"],
-    tr[id="row_client.sync_state"] { display: none !important; }
 </style>
 
 <script>
@@ -36,6 +25,7 @@ $(document).ready(function () {
     const state = {
         revision: 0,
         lastPlan: null,
+        hasGroups: false,
         importPreview: null
     };
 
@@ -80,7 +70,8 @@ $(document).ready(function () {
         alias: '{{ lang._('Alias') }}',
         filter_rule: '{{ lang._('Firewall rule') }}',
         pipe: '{{ lang._('Traffic Shaper pipe') }}',
-        shaper_rule: '{{ lang._('Traffic Shaper rule') }}'
+        shaper_rule: '{{ lang._('Traffic Shaper rule') }}',
+        client: '{{ lang._('Client') }}'
     };
     const operationLabels = {
         'settings.set': '{{ lang._('Update module settings') }}',
@@ -155,6 +146,7 @@ $(document).ready(function () {
         mutations.forEach(function (mutation) {
             mutation.addedNodes.forEach(function (node) {
                 if (node.nodeType === Node.ELEMENT_NODE) {
+                    applyNumericConstraints(node);
                     localizeGeneratedControls(node);
                 }
             });
@@ -174,11 +166,64 @@ $(document).ready(function () {
     function renderJson(value) {
         return JSON.stringify(value === undefined ? null : value, null, 2);
     }
+    const planChangeLimit = 250;
+    const planDiffCharacterLimit = 4000;
+
+    function renderJsonLimited(value, characterLimit) {
+        const rendered = renderJson(value);
+        return rendered.length <= characterLimit
+            ? rendered
+            : rendered.slice(0, characterLimit) + '\n… {{ lang._('Output truncated.') }}';
+    }
+
+    function renderTechnicalPlan(plan) {
+        const technical = Object.assign({}, plan);
+        const operations = plan.operations || [];
+        technical.operations = operations.slice(0, planChangeLimit);
+        if (operations.length > technical.operations.length) {
+            technical.operations_truncated = operations.length - technical.operations.length;
+        }
+        return renderJson(technical);
+    }
+
 
     function formatDateTime(value) {
         const date = new Date(value);
         return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
     }
+
+    function downloadJson(filename, value) {
+        const blob = new Blob([renderJson(value) + '\n'], {type: 'application/json;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+    const numericFields = {
+        'group.download': [0, 1000000],
+        'group.upload': [0, 1000000],
+        'group.max_states': [0, 2147483647],
+        'group.max_tcp_connections': [0, 2147483647],
+        'group.connection_rate': [0, 4294967],
+        'group.connection_rate_seconds': [0, 2147483647],
+        'group.packet_rate': [0, 4294967],
+        'group.packet_rate_seconds': [0, 2147483647],
+        'client.download_override': [0, 1000000],
+        'client.upload_override': [0, 1000000]
+    };
+
+    function applyNumericConstraints(root) {
+        Object.entries(numericFields).forEach(function (entry) {
+            const input = $(root).find('[id="' + entry[0] + '"]').addBack('[id="' + entry[0] + '"]');
+            input.attr({type: 'number', min: entry[1][0], max: entry[1][1], step: 1, inputmode: 'numeric'});
+        });
+    }
+    applyNumericConstraints(document);
+
 
     function setBanner(kind, message) {
         $('#cc-banner')
@@ -196,6 +241,17 @@ $(document).ready(function () {
             message = xhr.responseText;
         }
         setBanner('danger', message);
+        const staleMessage = '{{ lang._('The configuration changed after this page was loaded. Reload and retry.') }}';
+        if ((xhr && xhr.status === 409) || message.indexOf(staleMessage) !== -1) {
+            state.lastPlan = null;
+            $('#apply-plan').prop('disabled', true);
+            ajaxGet('/api/clientcontrol/service/status', {}, function (data) {
+                if (data && data.revision !== undefined) {
+                    state.revision = Number(data.revision);
+                    $('#cc-revision').text(data.revision);
+                }
+            });
+        }
     }
 
     function getJson(url, data) {
@@ -356,9 +412,21 @@ $(document).ready(function () {
         });
     }
 
+    function setClientCreationAvailable(hasGroups) {
+        state.hasGroups = hasGroups;
+        const message = '{{ lang._('Create a group before adding clients.') }}';
+        const addButton = $("#{{ formGridClients['table_id'] }} .command-add");
+        addButton.prop('disabled', !hasGroups).attr('title', hasGroups ? '' : message);
+        $('#quick-name, #quick-endpoint, #quick-kind, #quick-group, #quick-client-form button[type="submit"]')
+            .prop('disabled', !hasGroups)
+            .attr('title', hasGroups ? '' : message);
+        $('#quick-kind, #quick-group').selectpicker('refresh');
+    }
+
     function refreshGroupSelectors() {
-        queryJson('/api/clientcontrol/groups/search_group', {rowCount: -1, current: 1}).done(function (data) {
-            const groupSelects = $('#client\\.group, #bulk-group, #quick-group, #client-filter-group, #delete-group-source, #delete-group-target');
+        queryJson('/api/clientcontrol/clients/selectors', {}).done(function (data) {
+            const groups = data.groups || [];
+            const groupSelects = $('[id="client.group"], #bulk-group, #quick-group, #client-filter-group, #delete-group-source, #delete-group-target');
             const selected = {};
             groupSelects.each(function () {
                 selected[this.id] = $(this).val();
@@ -369,7 +437,8 @@ $(document).ready(function () {
                     $(this).append($('<option/>').val('').text('—'));
                 }
             });
-            (data.rows || []).forEach(function (group) {
+            setClientCreationAvailable(groups.length > 0);
+            groups.forEach(function (group) {
                 groupSelects.each(function () {
                     $(this).append($('<option/>').val(group.uuid).text(group.name));
                 });
@@ -379,13 +448,11 @@ $(document).ready(function () {
                     $(this).val(selected[this.id]);
                 }
             }).selectpicker('refresh');
-        });
 
-        queryJson('/api/clientcontrol/clients/search_client', {rowCount: -1, current: 1}).done(function (data) {
-            const clientSelect = $('#endpoint\\.client');
+            const clientSelect = $('[id="endpoint.client"]');
             const selectedClient = clientSelect.val();
             clientSelect.empty();
-            (data.rows || []).forEach(function (client) {
+            (data.clients || []).forEach(function (client) {
                 clientSelect.append($('<option/>').val(client.uuid).text(client.name));
             });
             if (selectedClient) {
@@ -433,9 +500,7 @@ $(document).ready(function () {
     function refreshStatus() {
         getJson('/api/clientcontrol/service/status').done(function (data) {
             state.revision = Number(data.revision || 0);
-            $('#general\\.revision').val(state.revision);
             $('#cc-revision').text(data.revision);
-            $('#cc-applied-revision').text(data.last_applied_revision);
             $('#cc-sync')
                 .text(translatedLabel(stateLabels, data.sync_state))
                 .attr('class', 'label ' + (data.sync_state === 'in_sync' ? 'label-success' : 'label-warning'));
@@ -446,19 +511,20 @@ $(document).ready(function () {
                         (data.status === 'error' ? 'label-danger' : 'label-default')));
             const conflicts = data.conflicts || [];
             $('#cc-last-message').text(
-                conflicts.length ? conflicts[0].message :
+                conflicts.length ? conflicts.map(function (conflict) { return conflict.message; }).join(' | ') :
                     (data.last_apply_time ? '{{ lang._('Last applied') }}: ' + formatDateTime(data.last_apply_time) : '')
             );
             $('#cc-managed-count').text(Object.values(data.managed_objects || {}).reduce(function (sum, value) {
                 return sum + Number(value);
             }, 0));
+            const platformWarning = (data.platform || {}).warning || '';
+            $('#cc-platform-warning').toggle(platformWarning !== '').text(platformWarning);
         });
     }
 
     function loadSettings() {
         mapDataToFormUI({frm_general: '/api/clientcontrol/settings/get'}).done(function (data) {
             state.revision = Number(data.revision || (data.general || {}).revision || 0);
-            $('#general\\.revision').val(state.revision);
             formatTokenizersUI();
             $('.selectpicker').selectpicker('refresh');
             refreshStatus();
@@ -466,11 +532,13 @@ $(document).ready(function () {
     }
 
     $('#save-settings').click(function () {
-        saveFormToEndpoint('/api/clientcontrol/settings/set', 'frm_general', function (data) {
+        const payload = getFormData('frm_general');
+        payload.revision = state.revision;
+        postJson('/api/clientcontrol/settings/set', payload).done(function (data) {
             if (mutationSucceeded(data)) {
                 loadSettings();
             }
-        }, true);
+        });
     });
 
     function resetGroupDeletionControls() {
@@ -595,29 +663,42 @@ $(document).ready(function () {
         const resultLabel = plan.status === 'ok' && !hasChanges
             ? '{{ lang._('Settings are already active') }}'
             : translatedLabel(planStatusLabels, plan.status);
+        const forecast = plan.forecast || {};
         $('#plan-summary').text(
             '{{ lang._('Settings version') }}: ' + plan.revision + ' · ' +
-            '{{ lang._('Result') }}: ' + resultLabel
+            '{{ lang._('Result') }}: ' + resultLabel + ' · ' +
+            '{{ lang._('Traffic Shaper rules') }}: ' + Number(forecast.shaper_rules || 0)
         );
         const tbody = $('#plan-rows').empty();
-        (plan.operations || []).forEach(function (operation) {
-            if (operation.action === 'noop') {
-                return;
-            }
+        const changes = (plan.operations || []).filter(function (operation) {
+            return operation.action !== 'noop';
+        });
+        changes.slice(0, planChangeLimit).forEach(function (operation) {
             const tr = $('<tr/>');
             tr.append($('<td/>').text(translatedLabel(actionLabels, operation.action)));
             tr.append($('<td/>').text(translatedLabel(coreTypeLabels, operation.core_type)));
             tr.append($('<td/>').text(operation.core_name));
-            tr.append($('<td/>').addClass('cc-diff-value').text(renderJson(operation.before)));
-            tr.append($('<td/>').addClass('cc-diff-value').text(renderJson(operation.after)));
+            tr.append($('<td/>').addClass('cc-diff-value').text(renderJsonLimited(operation.before, planDiffCharacterLimit)));
+            tr.append($('<td/>').addClass('cc-diff-value').text(renderJsonLimited(operation.after, planDiffCharacterLimit)));
             tbody.append(tr);
         });
+        if (changes.length > planChangeLimit) {
+            tbody.append($('<tr/>').addClass('warning').append(
+                $('<td/>').attr('colspan', 5).text('{{ lang._('The plan table is truncated to protect browser responsiveness.') }}')
+            ));
+        }
         (plan.conflicts || []).forEach(function (conflict) {
             const tr = $('<tr/>').addClass('danger');
             tr.append($('<td/>').text(translatedLabel(actionLabels, 'conflict')));
             tr.append($('<td/>').text(translatedLabel(coreTypeLabels, conflict.core_type)));
             tr.append($('<td/>').text(conflict.core_name));
             tr.append($('<td/>').attr('colspan', 2).text(conflict.message));
+            tbody.append(tr);
+        });
+        (plan.notices || []).forEach(function (notice) {
+            const tr = $('<tr/>').addClass('warning');
+            tr.append($('<td/>').text('{{ lang._('Warning') }}'));
+            tr.append($('<td/>').attr('colspan', 4).text(notice.message));
             tbody.append(tr);
         });
         if (!tbody.children().length) {
@@ -627,7 +708,7 @@ $(document).ready(function () {
                 )
             );
         }
-        $('#plan-json').text(renderJson(plan));
+        $('#plan-json').text(renderTechnicalPlan(plan));
     }
 
     function renderImportPreview(data) {
@@ -639,7 +720,7 @@ $(document).ready(function () {
         const box = $('#import-preview-summary').empty();
         box.append(
             $('<p/>').addClass('cc-summary-counts').text(
-                '{{ lang._('Will be added') }} — ' +
+                '{{ lang._('Will be imported as disabled') }} — ' +
                 '{{ lang._('Groups') }}: ' + groups.length + '; ' +
                 '{{ lang._('Clients') }}: ' + clients.length + '; ' +
                 '{{ lang._('Addresses') }}: ' + addressCount
@@ -659,7 +740,7 @@ $(document).ready(function () {
             box.append(alert);
         };
         appendMessages('warning', '{{ lang._('Warnings') }}', data.warnings || []);
-        appendMessages('danger', '{{ lang._('Problems') }}', data.errors || []);
+        appendMessages(data.can_apply ? 'warning' : 'danger', '{{ lang._('Skipped aliases') }}', data.errors || []);
         if (!(data.warnings || []).length && !(data.errors || []).length) {
             box.append($('<div/>').addClass('alert alert-success').text(
                 '{{ lang._('No problems found. You can import the selected aliases.') }}'
@@ -704,7 +785,7 @@ $(document).ready(function () {
                     state.lastPlan = null;
                     $('#apply-plan').prop('disabled', true);
                     setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
-                    $('#plan-json').text(renderJson(data));
+                    $('#plan-json').text(renderTechnicalPlan(data));
                     refreshStatus();
                 });
             }
@@ -721,28 +802,47 @@ $(document).ready(function () {
                 return;
             }
             rows.forEach(function (alias) {
-                const checked = alias.recommended ? ' checked' : '';
-                const id = 'cc-import-' + alias.uuid;
-                box.append(
-                    '<label class="checkbox-inline"><input type="checkbox" id="' + escapeHtml(id) +
-                    '" value="' + escapeHtml(alias.name) + '"' + checked + '> ' +
-                    escapeHtml(alias.name) + ' <span class="text-muted">(' +
-                    escapeHtml(translatedLabel(aliasTypeLabels, alias.type)) +
-                    ', ' + alias.item_count + ')</span></label>'
-                );
+                const input = $('<input/>', {
+                    type: 'checkbox',
+                    id: 'cc-import-' + alias.uuid,
+                    value: alias.name,
+                    disabled: !alias.importable
+                });
+                const label = $('<label/>').addClass('checkbox-inline').append(input, ' ', alias.name, ' ');
+                label.append($('<span/>').addClass('text-muted').text(
+                    '(' + translatedLabel(aliasTypeLabels, alias.type) + ', ' + alias.item_count + ')'
+                ));
+                if (alias.reason) {
+                    label.append($('<span/>').addClass('text-warning').text(' — ' + alias.reason));
+                }
+                box.append(label);
             });
-            $('#preview-import').prop('disabled', false);
+            $('#preview-import').prop('disabled', !rows.some(function (alias) {
+                return alias.importable;
+            }));
         });
+    });
+
+    $('#import-reuse-groups').change(function () {
+        state.importPreview = null;
+        $('#apply-import').prop('disabled', true);
     });
 
     $('#preview-import').click(function () {
         const aliases = $('#import-aliases input:checked').map(function () {
             return this.value;
         }).get();
-        queryJson('/api/clientcontrol/import/preview', {alias_names: aliases}).done(function (data) {
+        if (!aliases.length) {
+            setBanner('warning', '{{ lang._('Select at least one importable alias.') }}');
+            return;
+        }
+        queryJson('/api/clientcontrol/import/preview', {
+            alias_names: aliases,
+            reuse_existing_groups: $('#import-reuse-groups').prop('checked') ? '1' : '0'
+        }).done(function (data) {
             state.importPreview = data;
             renderImportPreview(data);
-            $('#apply-import').prop('disabled', (data.errors || []).length > 0);
+            $('#apply-import').prop('disabled', !data.can_apply);
         });
     });
 
@@ -753,13 +853,14 @@ $(document).ready(function () {
         postJson('/api/clientcontrol/import/apply', {
             revision: state.revision,
             alias_names: state.importPreview.selected_aliases,
+            reuse_existing_groups: state.importPreview.reuse_existing_groups ? '1' : '0',
             preview_hash: state.importPreview.preview_hash
         }).done(function (data) {
             if (mutationSucceeded(data)) {
                 state.importPreview = null;
                 $('#apply-import').prop('disabled', true);
                 $('#import-preview-summary, #import-preview-json').empty();
-                setBanner('success', '{{ lang._('Aliases imported into Client Control. Source aliases were not modified.') }}');
+                setBanner('success', '{{ lang._('Aliases were imported as disabled clients. Source aliases were not modified.') }}');
             }
         });
     });
@@ -768,11 +869,15 @@ $(document).ready(function () {
         getJson('/api/clientcontrol/diagnostics/runtime').done(function (data) {
             $('#runtime-json').text(renderJson(data));
             const warnings = data.warnings || [];
+            const warningLines = warnings.map(function (warning) {
+                return warning.client_name + ': ' + warning.endpoint + ' — ' + warning.message;
+            });
+            if ((data.pf_states || {}).truncated) {
+                warningLines.unshift('{{ lang._('Connection counters are truncated at the firewall query limit.') }}');
+            }
             $('#runtime-warnings')
-                .toggle(warnings.length > 0)
-                .text(warnings.map(function (warning) {
-                    return warning.client_name + ': ' + warning.endpoint + ' — ' + warning.message;
-                }).join('\n'));
+                .toggle(warningLines.length > 0)
+                .text(warningLines.join('\n'));
             const tbody = $('#runtime-rows').empty();
             (data.clients || []).forEach(function (client) {
                 const tr = $('<tr/>');
@@ -782,7 +887,7 @@ $(document).ready(function () {
                         .addClass(client.online ? 'label label-success' : 'label label-default')
                         .text(client.online ? '{{ lang._('Online') }}' : '{{ lang._('Offline') }}')
                 ));
-                tr.append($('<td/>').text(client.state_count));
+                tr.append($('<td/>').text(client.state_count_label || client.state_count));
                 tr.append($('<td/>').text((client.neighbors || []).length));
                 tr.append($('<td/>').text(translatedLabel(stateLabels, client.sync_state)));
                 tbody.append(tr);
@@ -792,7 +897,7 @@ $(document).ready(function () {
 
     $('#refresh-audit').click(function () {
         queryJson('/api/clientcontrol/diagnostics/audit', {
-            rowCount: 100,
+            rowCount: 1000,
             current: 1,
             sort: {timestamp: 'desc'}
         }).done(function (data) {
@@ -809,10 +914,28 @@ $(document).ready(function () {
         });
     });
 
+    $('#export-audit').click(function () {
+        getJson('/api/clientcontrol/diagnostics/audit_export').done(function (data) {
+            downloadJson('client-control-audit.json', data);
+        });
+    });
+
+    let runtimeLoaded = false;
+    let auditLoaded = false;
+    $('a[href="#cc-runtime"]').on('shown.bs.tab', function () {
+        if (!runtimeLoaded) {
+            runtimeLoaded = true;
+            $('#refresh-runtime').trigger('click');
+        }
+    });
+    $('a[href="#cc-audit"]').on('shown.bs.tab', function () {
+        if (!auditLoaded) {
+            auditLoaded = true;
+            $('#refresh-audit').trigger('click');
+        }
+    });
     refreshGroupSelectors();
     loadSettings();
-    $('#refresh-runtime').trigger('click');
-    $('#refresh-audit').trigger('click');
 });
 </script>
 
@@ -826,6 +949,7 @@ $(document).ready(function () {
     <span class="label label-default" title="{{ lang._('Aliases, firewall rules, and speed-limit objects created by Client Control.') }}">{{ lang._('OPNsense objects') }}: <span id="cc-managed-count">0</span></span>
     <span class="text-muted" id="cc-last-message"></span>
 </div>
+<div id="cc-platform-warning" class="alert alert-warning" style="display:none"></div>
 
 <ul class="nav nav-tabs" role="tablist">
     <li class="active"><a href="#cc-general" data-toggle="tab">{{ lang._('Settings') }}</a></li>
@@ -925,6 +1049,10 @@ $(document).ready(function () {
             <button id="preview-import" class="btn btn-info" disabled><i class="fa fa-eye"></i> {{ lang._('Check import') }}</button>
             <button id="apply-import" class="btn btn-primary" disabled><i class="fa fa-download"></i> {{ lang._('Import selected') }}</button>
         </div>
+        <label class="checkbox-inline">
+            <input id="import-reuse-groups" type="checkbox">
+            {{ lang._('Reuse an existing group with the same name without changing its policy') }}
+        </label>
         <div id="import-aliases" class="well well-sm"></div>
         <div id="import-preview-summary"></div>
         <details class="cc-technical"><summary>{{ lang._('Technical import details') }}</summary><pre id="import-preview-json" class="cc-console"></pre></details>
@@ -965,7 +1093,10 @@ $(document).ready(function () {
 
     <div id="cc-audit" class="tab-pane">
         <p class="cc-section-intro">{{ lang._('The history records who changed the settings and when rules were applied or rolled back.') }}</p>
-        <div class="cc-panel-actions"><button id="refresh-audit" class="btn btn-default"><i class="fa fa-refresh"></i> {{ lang._('Refresh') }}</button></div>
+        <div class="cc-panel-actions">
+            <button id="refresh-audit" class="btn btn-default"><i class="fa fa-refresh"></i> {{ lang._('Refresh') }}</button>
+            <button id="export-audit" class="btn btn-default"><i class="fa fa-download"></i> {{ lang._('Export JSON') }}</button>
+        </div>
         <div class="table-responsive"><table class="table table-condensed table-striped"><thead><tr><th>{{ lang._('Date and time') }}</th><th>{{ lang._('User') }}</th><th>{{ lang._('Action') }}</th><th>{{ lang._('Details') }}</th><th>{{ lang._('Result') }}</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
     </div>
 </div>

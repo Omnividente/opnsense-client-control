@@ -17,17 +17,51 @@ final class ScheduleEvaluator
         if ($name === '') {
             return true;
         }
-        $now = $now instanceof \DateTimeInterface ? $now : new \DateTimeImmutable('now');
         $config = $config ?? Config::getInstance()->object();
+        if (!($now instanceof \DateTimeInterface)) {
+            $now = new \DateTimeImmutable('now', $this->configuredTimezone($config));
+        }
+        $schedule = $this->findSchedule($name, $config);
+        return $schedule === null ? false : $this->scheduleIsActive($schedule, $now);
+    }
+
+    public function exists($name, $config = null)
+    {
+        $name = trim((string)$name);
+        if ($name === '') {
+            return true;
+        }
+        $config = $config ?? Config::getInstance()->object();
+        return $this->findSchedule($name, $config) !== null;
+    }
+
+    public function timezoneName($config = null)
+    {
+        $config = $config ?? Config::getInstance()->object();
+        return $this->configuredTimezone($config)->getName();
+    }
+
+    private function findSchedule($name, $config)
+    {
         if (!isset($config->schedules->schedule)) {
-            return false;
+            return null;
         }
         foreach ($config->schedules->schedule as $schedule) {
-            if ((string)$schedule->name === $name) {
-                return $this->scheduleIsActive($schedule, $now);
+            if ((string)$schedule->name === (string)$name) {
+                return $schedule;
             }
         }
-        return false;
+        return null;
+    }
+
+    private function configuredTimezone($config)
+    {
+        $name = trim((string)($config->system->timezone ?? '')) ?: 'UTC';
+        try {
+            return new \DateTimeZone($name);
+        } catch (\Throwable $error) {
+            return new \DateTimeZone('UTC');
+        }
     }
 
     private function scheduleIsActive($schedule, \DateTimeInterface $now)
@@ -78,7 +112,8 @@ final class ScheduleEvaluator
         }
         $current = ((int)$now->format('G') * 3600) + ((int)$now->format('i') * 60) +
             (int)$now->format('s');
-        return $current >= ($start * 60) && $current <= ($end * 60);
+        $endSecond = $end === 24 * 60 ? $end * 60 : ($end * 60) + 59;
+        return $current >= ($start * 60) && $current <= $endSecond;
     }
 
     private function minutes($value)

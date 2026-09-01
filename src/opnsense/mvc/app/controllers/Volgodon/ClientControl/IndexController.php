@@ -31,8 +31,7 @@ class IndexController extends BaseIndexController
             return parent::getFormGrid($formName);
         }
 
-        $classInfo = new \ReflectionClass($this);
-        $filename = dirname($classInfo->getFileName()) . '/forms/' . $formName . '.xml';
+        $filename = __DIR__ . '/forms/' . $formName . '.xml';
         if (!file_exists($filename)) {
             throw new \RuntimeException('form xml ' . $filename . ' missing');
         }

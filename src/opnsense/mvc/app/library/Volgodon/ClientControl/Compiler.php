@@ -13,6 +13,7 @@ class Compiler
 {
     public const ORIGIN = 'ClientControl';
     public const CATEGORY = 'ClientControl';
+    private const SHAPER_RULE_WARNING_THRESHOLD = 64;
 
     public function compile($model, array $resolvedMacs = [])
     {
@@ -21,7 +22,10 @@ class Compiler
 
     public function compileState(array $state)
     {
-        $this->validateStateShape($state);
+        $warnings = $this->validateStateShape($state);
+        $warnings = array_merge($warnings, $this->unsupportedPlatformWarnings($state));
+        $configurationState = $state;
+        $notices = $this->degradeUnavailableSchedules($state);
         $desired = [
             'categories' => [],
             'aliases' => [],
@@ -29,6 +33,8 @@ class Compiler
             'preview_filter_rules' => [],
             'pipes' => [],
             'shaper_rules' => [],
+            'warnings' => $warnings,
+            'notices' => $notices,
         ];
         $clients = $state['clients'];
         $groups = $state['groups'];
@@ -114,11 +120,9 @@ class Compiler
         }
 
         $groupAccessAliases = [];
-        $groupShaperAliases = [];
         $groupShaperAddresses = [];
         foreach ($groups as $groupUuid => $group) {
             $accessMembers = [];
-            $shaperMembers = [];
             $shaperAddresses = [];
             foreach ($clients as $clientUuid => $client) {
                 if ($client['group'] !== $groupUuid || !$this->effectiveEnabled($client, $group)) {
@@ -133,16 +137,12 @@ class Compiler
                     $accessMembers[] = $aliasName;
                 }
                 if ($client['shaping_override'] === 'inherit') {
-                    foreach ($endpointAliases[$clientUuid] ?? [] as $aliasName) {
-                        $shaperMembers[] = $aliasName;
-                    }
                     foreach ($clientShaperAddresses[$clientUuid] ?? [] as $address) {
                         $shaperAddresses[] = $address;
                     }
                 }
             }
             $accessMembers = $this->sortedUnique($accessMembers);
-            $shaperMembers = $this->sortedUnique($shaperMembers);
             $groupShaperAddresses[$groupUuid] = $this->sortedUnique($shaperAddresses);
 
             $groupName = 'CC_G_' . $this->token($groupUuid);
@@ -163,25 +163,6 @@ class Compiler
             );
             $groupAccessAliases[$groupUuid] = $groupName;
 
-            if ($group['shaping_mode'] !== 'unlimited') {
-                $shaperName = 'CC_S_' . $this->token($groupUuid);
-                $desired['aliases']['group:' . $groupUuid . ':shaper'] = $this->desiredObject(
-                    'group',
-                    $groupUuid,
-                    'alias',
-                    $shaperName,
-                    [
-                        'enabled' => '1',
-                        'name' => $shaperName,
-                        'type' => 'networkgroup',
-                        'proto' => '',
-                        'content' => implode("\n", $shaperMembers),
-                        'categories' => self::CATEGORY,
-                        'description' => sprintf('ClientControl group=%s purpose=shaper', $groupUuid),
-                    ]
-                );
-                $groupShaperAliases[$groupUuid] = $shaperName;
-            }
         }
 
         $allowedGroups = [];
@@ -259,13 +240,40 @@ class Compiler
         foreach (['categories', 'aliases', 'filter_rules', 'preview_filter_rules', 'pipes', 'shaper_rules'] as $section) {
             ksort($desired[$section], SORT_STRING);
         }
-        $desired['fingerprint'] = Canonical::fingerprint([
+        foreach ($configurationState['groups'] as &$group) {
+            unset($group['schedule_exists']);
+        }
+        unset($group);
+        foreach ($configurationState['clients'] as &$client) {
+            foreach ($client['endpoints'] as &$endpoint) {
+                unset($endpoint['resolved_ips']);
+            }
+            unset($endpoint);
+        }
+        unset($client);
+        $desired['fingerprint'] = Canonical::fingerprint($configurationState);
+        $desired['runtime_fingerprint'] = Canonical::fingerprint([
             'categories' => $desired['categories'],
             'aliases' => $desired['aliases'],
             'filter_rules' => $desired['filter_rules'],
             'pipes' => $desired['pipes'],
             'shaper_rules' => $desired['shaper_rules'],
         ]);
+        $desired['forecast'] = [
+            'filter_rules' => count($desired['filter_rules']),
+            'shaper_rules' => count($desired['shaper_rules']),
+            'managed_objects' => count($desired['categories']) + count($desired['aliases']) +
+                count($desired['filter_rules']) + count($desired['pipes']) + count($desired['shaper_rules']),
+        ];
+        if ($desired['forecast']['shaper_rules'] > self::SHAPER_RULE_WARNING_THRESHOLD) {
+            $desired['notices'][] = [
+                'reason' => 'high_shaper_rule_count',
+                'message' => sprintf(
+                    gettext('This plan creates %d Traffic Shaper rules; review interface and policy combinations.'),
+                    $desired['forecast']['shaper_rules']
+                ),
+            ];
+        }
         return $desired;
     }
 
@@ -283,6 +291,7 @@ class Compiler
             'groups' => [],
             'clients' => [],
         ];
+        $scheduleEvaluator = new ScheduleEvaluator();
         foreach ($model->groups->group->iterateItems() as $uuid => $group) {
             $state['groups'][$uuid] = [
                 'enabled' => ((string) $group->enabled === (string) '1'),
@@ -293,6 +302,7 @@ class Compiler
                 'upload' => ((int) (string) $group->upload),
                 'metric' => (string)$group->metric,
                 'schedule' => (string)$group->schedule,
+                'schedule_exists' => $scheduleEvaluator->exists((string)$group->schedule),
                 'max_states' => ((int) (string) $group->max_states),
                 'max_tcp_connections' => ((int) (string) $group->max_tcp_connections),
                 'connection_rate' => ((int) (string) $group->connection_rate),
@@ -416,6 +426,10 @@ class Compiler
             $fields = $base;
             $fields['source_net'] = $groupAliases[$groupUuid];
             $fields['sched'] = $group['schedule'];
+            if ($group['packet_rate'] > 0 && Platform::supportsPacketRate()) {
+                $fields['max-pkt-rate-number'] = $this->optionalInt($group['packet_rate']);
+                $fields['max-pkt-rate-seconds'] = $this->optionalInt($group['packet_rate_seconds']);
+            }
             $fields['max-src-states'] = $this->optionalInt($group['max_states']);
             $packetRate = $group['packet_rate'] > 0 ?
                 sprintf(' packet_rate=%d/%d', $group['packet_rate'], $group['packet_rate_seconds']) : '';
@@ -719,17 +733,89 @@ class Compiler
         natcasesort($values);
         return array_values($values);
     }
+    private function degradeUnavailableSchedules(array &$state)
+    {
+        $notices = [];
+        foreach ($state['groups'] as $groupUuid => &$group) {
+            if (empty($group['enabled']) || trim((string)($group['schedule'] ?? '')) === '' ||
+                !array_key_exists('schedule_exists', $group) || !empty($group['schedule_exists'])) {
+                continue;
+            }
+            $group['enabled'] = false;
+            $notices[] = [
+                'reason' => 'missing_schedule',
+                'group_uuid' => (string)$groupUuid,
+                'message' => sprintf(
+                    gettext('Group %s is fail-closed because schedule %s no longer exists.'),
+                    (string)($group['name'] ?? $groupUuid),
+                    (string)$group['schedule']
+                ),
+            ];
+        }
+        unset($group);
+        return $notices;
+    }
 
-    private function validateStateShape($state)
+
+    private function unsupportedPlatformWarnings(array $state)
+    {
+        if (Platform::supportsPacketRate()) {
+            return [];
+        }
+        $warnings = [];
+        foreach ($state['groups'] as $groupUuid => $group) {
+            if (empty($group['enabled']) || (int)($group['packet_rate'] ?? 0) === 0) {
+                continue;
+            }
+            $groupName = trim((string)($group['name'] ?? '')) ?: (string)$groupUuid;
+            $warnings[] = [
+                'identity' => 'group|' . $groupUuid,
+                'core_type' => 'filter_rule',
+                'core_name' => $groupName,
+                'core_uuid' => (string)$groupUuid,
+                'reason' => 'unsupported_packet_rate',
+                'message' => sprintf(
+                    gettext('Group %s is fail-closed because this firewall backend does not support packet-rate limits.'),
+                    $groupName
+                ),
+                'before' => null,
+                'desired' => [
+                    'packet_rate' => (int)$group['packet_rate'],
+                    'packet_rate_seconds' => (int)($group['packet_rate_seconds'] ?? 0),
+                ],
+                'changes' => [],
+            ];
+        }
+        return $warnings;
+    }
+
+    private function validateStateShape(array &$state)
     {
         foreach (['general', 'groups', 'clients'] as $key) {
             if (!isset($state[$key]) || !is_array($state[$key])) {
                 throw new InvalidArgumentException(sprintf('Missing state section: %s', $key));
             }
         }
-        foreach ($state['clients'] as $client) {
+        $warnings = [];
+        foreach ($state['clients'] as $clientUuid => $client) {
             if (!isset($state['groups'][$client['group']])) {
-                throw new InvalidArgumentException(gettext('Client refers to a missing group.'));
+                $clientName = trim((string)($client['name'] ?? '')) ?: (string)$clientUuid;
+                $warnings[] = [
+                    'identity' => 'client|' . $clientUuid,
+                    'core_type' => 'client',
+                    'core_name' => $clientName,
+                    'core_uuid' => (string)$clientUuid,
+                    'reason' => 'missing_group',
+                    'message' => sprintf(
+                        gettext('Client %s was excluded from policy compilation because its group is missing.'),
+                        $clientName
+                    ),
+                    'before' => ['group' => (string)($client['group'] ?? '')],
+                    'desired' => null,
+                    'changes' => [],
+                ];
+                unset($state['clients'][$clientUuid]);
+                continue;
             }
             foreach ($client['endpoints'] as $endpoint) {
                 if (!in_array($endpoint['kind'], ['ipv4', 'ipv6', 'mac'], true)) {
@@ -741,5 +827,6 @@ class Compiler
             !in_array($state['general']['destination_scope'], ['any', 'wan', 'custom'], true)) {
             throw new InvalidArgumentException(gettext('Unknown enforcement or destination mode.'));
         }
+        return $warnings;
     }
 }

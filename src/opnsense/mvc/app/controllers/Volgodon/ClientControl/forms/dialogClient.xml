@@ -14,32 +14,32 @@
     </field>
     <field>
         <id>client.endpoints_text</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Addresses</label><visible>true</visible></grid_view>
     </field>
     <field>
         <id>client.access</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Access</label><visible>true</visible><formatter>accessState</formatter></grid_view>
     </field>
     <field>
         <id>client.download</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Download limit</label><visible>true</visible><formatter>effectiveRate</formatter></grid_view>
     </field>
     <field>
         <id>client.upload</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Upload limit</label><visible>true</visible><formatter>effectiveRate</formatter></grid_view>
     </field>
     <field>
         <id>client.online</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Network</label><visible>true</visible><formatter>onlineState</formatter></grid_view>
     </field>
     <field>
         <id>client.sync_state</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><label>Rules</label><visible>true</visible><formatter>syncState</formatter></grid_view>
     </field>
     <field>
@@ -51,12 +51,12 @@
     </field>
     <field>
         <id>client.metric</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><visible>false</visible></grid_view>
     </field>
     <field>
         <id>client.state_count</id>
-        <type>hidden</type>
+        <type>ignore</type>
         <grid_view><visible>false</visible></grid_view>
     </field>
     <field>

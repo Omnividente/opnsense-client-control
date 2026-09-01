@@ -103,7 +103,11 @@ final class FirewallHook
             }
         }
         if ((int)$packetRate > 0 && (int)$packetRateSeconds > 0) {
-            $config['dn'] = sprintf('max-pkt-rate %d/%d', (int)$packetRate, (int)$packetRateSeconds);
+            if (Platform::supportsPacketRate()) {
+                $config['max-pkt-rate'] = sprintf('%d/%d', (int)$packetRate, (int)$packetRateSeconds);
+            } else {
+                $config['disabled'] = true;
+            }
         }
         return $config;
     }
