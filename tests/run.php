@@ -410,6 +410,19 @@ try {
 }
 check($acceptRejected, 'external drift can only be preserved as a conflict or explicitly restored');
 
+$generalForm = simplexml_load_file(
+    __DIR__ . '/../src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml'
+);
+check($generalForm !== false, 'the settings form must be valid XML');
+$generalFieldIds = [];
+foreach ($generalForm->field as $field) {
+    $generalFieldIds[] = (string)$field->id;
+}
+check(
+    !in_array('general.stale_neighbor_policy', $generalFieldIds, true),
+    'the fixed stale-neighbor policy must not be serialized as an editable settings field'
+);
+
 require __DIR__ . '/controller-load.php';
 
 if (extension_loaded('gettext')) {

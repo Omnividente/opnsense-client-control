@@ -16,7 +16,6 @@
     .cc-section-intro { margin: 0 0 14px; color: #555; }
     .cc-technical { margin-top: 14px; }
     .cc-summary-counts { font-size: 15px; margin-bottom: 10px; }
-    tr[id="row_general.stale_neighbor_policy"],
     tr[id="row_general.revision"],
     tr[id="row_group.members"],
     tr[id="row_group.sync_state"],

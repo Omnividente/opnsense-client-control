@@ -36,10 +36,6 @@
         <help>Fill this only when “Selected alias” is chosen above.</help>
     </field>
     <field>
-        <id>general.stale_neighbor_policy</id>
-        <type>hidden</type>
-    </field>
-    <field>
         <id>general.revision</id>
         <label>Settings version</label>
         <type>hidden</type>
