@@ -75,6 +75,20 @@ find src -type f -name '*.xml' -exec "$XMLLINT" --noout {} +
 git ls-files -z -- '*.sh' '+*.pre' '+*.post' |
     xargs -0 -r "$SHELLCHECK"
 
+for executable_hook in \
+    src/etc/rc.syshook.d/start/90-clientcontrol \
+    src/opnsense/scripts/Volgodon/ClientControl/audit_rotate.sh
+do
+    executable_index=$(git ls-files -s -- "$executable_hook")
+    case "$executable_index" in
+        '100755 '*) ;;
+        *)
+            echo "Client Control runtime hook must be tracked with mode 100755: $executable_hook" >&2
+            exit 1
+            ;;
+    esac
+done
+
 "$ACTIONLINT" -color
 "$PYTHON" tools/workflow-policy.py --self-test
 # Deliberately omit xargs -r: an empty tracked set must invoke the policy and fail closed.

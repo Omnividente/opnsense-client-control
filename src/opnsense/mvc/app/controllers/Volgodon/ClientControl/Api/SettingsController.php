@@ -48,7 +48,14 @@ class SettingsController extends ClientControlControllerBase
                 }
             }
             $model->general->setNodes(array_intersect_key($payload, array_flip(self::EDITABLE_FIELDS)));
-            return $this->finishMutation($model, 'settings.set', 'updated module settings');
+            return $this->finishMutation(
+                $model,
+                'settings.set',
+                'updated module settings',
+                [],
+                $model->general,
+                'general'
+            );
         } finally {
             $this->unlockModel();
         }

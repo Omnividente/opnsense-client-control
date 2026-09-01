@@ -45,6 +45,59 @@ if (is_file('/usr/local/etc/inc/config.inc')) {
         !in_array('stale_neighbor_policy', $editableSettings, true),
         'the fixed stale-neighbor policy must not be mutable through the settings API'
     );
+    $previousMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+    $previousPost = $_POST;
+    try {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $model = new Volgodon\ClientControl\ClientControl();
+        $revision = (string)$model->general->revision;
+
+        $_POST = [
+            'revision' => $revision,
+            'general' => [
+                'destination_scope' => 'custom',
+                'destination_alias' => 'CC_ALIAS_THAT_DOES_NOT_EXIST',
+            ],
+        ];
+        $settingsController = $settingsReflection->newInstanceWithoutConstructor();
+        $settingsController->request = new OPNsense\Mvc\Request();
+        $settingsValidation = $settingsController->setAction();
+        check(isset($settingsValidation['validations']['general.destination_alias']),
+            'settings validation must use the exact form field identifier');
+        check(!isset($settingsValidation['validations']['general.general.destination_alias']),
+            'settings validation must not duplicate the model prefix');
+
+        $_POST = ['revision' => $revision, 'group' => ['download' => '']];
+        $groupsReflection = new ReflectionClass(Volgodon\ClientControl\Api\GroupsController::class);
+        $groupsController = $groupsReflection->newInstanceWithoutConstructor();
+        $groupsController->request = new OPNsense\Mvc\Request();
+        $groupValidation = $groupsController->addGroupAction();
+        check(isset($groupValidation['validations']['group.download']),
+            'an empty group rate must return a field-level validation');
+        check(str_contains(
+            $groupValidation['validations']['group.download'],
+            gettext('Download limit')
+        ), 'the group rate validation must use a human field label');
+
+        $_POST = ['revision' => $revision, 'client' => ['download_override' => '']];
+        $clientsReflection = new ReflectionClass(Volgodon\ClientControl\Api\ClientsController::class);
+        $clientsController = $clientsReflection->newInstanceWithoutConstructor();
+        $clientsController->request = new OPNsense\Mvc\Request();
+        $clientValidation = $clientsController->addClientAction();
+        check(isset($clientValidation['validations']['client.download_override']),
+            'an empty client override must return a field-level validation');
+        check(str_contains(
+            $clientValidation['validations']['client.download_override'],
+            gettext('Client download limit')
+        ), 'the client override validation must use a human field label');
+    } finally {
+        $_POST = $previousPost;
+        if ($previousMethod === null) {
+            unset($_SERVER['REQUEST_METHOD']);
+        } else {
+            $_SERVER['REQUEST_METHOD'] = $previousMethod;
+        }
+    }
     $fakeBackend = function ($filterResult = 'OK') {
         return new class($filterResult) {
             public $commands = [];

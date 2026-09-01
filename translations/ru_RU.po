@@ -1926,6 +1926,14 @@ msgstr "Настройки уже действуют"
 msgid "%s must be a whole number from 0 through %d."
 msgstr "Поле %s должно быть целым числом от 0 до %d."
 
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "The configuration or managed objects changed. Review the current diff before applying."
+msgstr "Конфигурация или управляемые объекты изменились. Перед применением проверьте текущий список изменений."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+msgid "Current network addresses changed after this plan was built. Review the current diff before applying."
+msgstr "После построения плана изменились текущие сетевые адреса. Перед применением проверьте актуальный список изменений."
+
 #: src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php
 msgid "Compatibility firewall backend is active because the persistent filter model lacks a required capability."
 msgstr "Используется совместимый backend межсетевого экрана: в постоянной модели фильтра отсутствует необходимая возможность."

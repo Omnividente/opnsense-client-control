@@ -10,6 +10,7 @@ namespace Volgodon\ClientControl\Api;
 use OPNsense\Base\UserException;
 use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
+use Volgodon\ClientControl\AuditLog;
 use Volgodon\ClientControl\ClientControl;
 use Volgodon\ClientControl\Platform;
 use Volgodon\ClientControl\Reconciler;
@@ -61,7 +62,15 @@ class ServiceController extends ClientControlControllerBase
             $postedFingerprint = (string)$this->request->getPost('plan_fingerprint');
             if ($postedFingerprint === '' || !hash_equals($plan['plan_fingerprint'], $postedFingerprint)) {
                 throw new UserException(
-                    gettext('The apply plan changed. Review the current diff before applying.'),
+                    gettext('The configuration or managed objects changed. Review the current diff before applying.'),
+                    gettext('Client Control')
+                );
+            }
+            $postedRuntimeFingerprint = (string)$this->request->getPost('runtime_plan_fingerprint');
+            if ($postedRuntimeFingerprint === '' ||
+                !hash_equals($plan['runtime_plan_fingerprint'], $postedRuntimeFingerprint)) {
+                throw new UserException(
+                    gettext('Current network addresses changed after this plan was built. Review the current diff before applying.'),
                     gettext('Client Control')
                 );
             }
@@ -73,7 +82,7 @@ class ServiceController extends ClientControlControllerBase
             }
             if (((string) $model->general->enabled === (string) '1') &&
                 ((string) $model->general->enforcement_mode === (string) 'enforce') &&
-                !hash_equals($plan['plan_fingerprint'], (string)$this->request->getPost('confirm_enforce'))) {
+                !hash_equals($plan['runtime_plan_fingerprint'], (string)$this->request->getPost('confirm_enforce'))) {
                 throw new UserException(
                     gettext('Confirm the exact current diff before enabling enforcement.'),
                     gettext('Client Control')
@@ -111,6 +120,7 @@ class ServiceController extends ClientControlControllerBase
 
             $runtime = $this->reloadRuntime($flushIpFw, $model);
             $verified = $this->verifyAppliedState($model, $reconciler->getResolvedMacs());
+            $model->flushAuditLog();
             $verified['runtime'] = $runtime;
             $verified['plan'] = $plan;
             $verified['result'] = 'applied';
@@ -192,6 +202,7 @@ class ServiceController extends ClientControlControllerBase
             'revision' => (int)(string)$model->general->revision,
             'managed_objects' => count($plan['operations']),
             'plan_fingerprint' => $plan['plan_fingerprint'],
+            'runtime_plan_fingerprint' => $plan['runtime_plan_fingerprint'],
         ];
     }
 
@@ -277,16 +288,18 @@ class ServiceController extends ClientControlControllerBase
         try {
             Config::getInstance()->lock(true);
             $model = new ClientControl();
-            $message = substr($error->getMessage(), 0, 255);
+            $fullMessage = (string)$error->getMessage();
             if ($rollbackError !== null) {
-                $message = substr($message . '; rollback: ' . $rollbackError->getMessage(), 0, 255);
+                $fullMessage .= '; rollback: ' . $rollbackError->getMessage();
             }
+            $message = AuditLog::compactSummary($fullMessage);
             $model->general->last_apply_status = 'error';
             $model->general->last_apply_message = $message;
             $model->general->last_apply_time = gmdate('c');
-            $model->appendAudit($this->getUserName(), 'service.rollback', $message, 'error');
+            $model->appendAudit($this->getUserName(), 'service.rollback', $fullMessage, 'error');
             $model->serializeToConfig(false, true);
             Config::getInstance()->save(['description' => 'Client Control apply rollback']);
+            $model->flushAuditLog();
         } catch (\Throwable $statusError) {
             $this->getLogger('clientcontrol')->error('Unable to record rollback status: ' . $statusError->getMessage());
         } finally {

@@ -49,13 +49,19 @@ class Reconciler
         $plan['revision'] = ((int) (string) $this->model->general->revision);
         $plan['mode'] = (string)$this->model->general->enforcement_mode;
         $plan['notices'] = $this->desired['notices'] ?? [];
-        $plan['plan_fingerprint'] = Canonical::fingerprint([
-            'revision' => $plan['revision'],
-            'mode' => $plan['mode'],
-            'desired' => $this->desired,
-            'operations' => $plan['operations'],
-            'conflicts' => $plan['conflicts'],
-        ]);
+        $plan['plan_fingerprint'] = PlanFingerprint::intent(
+            $plan['revision'],
+            $plan['mode'],
+            $strategy,
+            $this->desired,
+            $managed,
+            $raw
+        );
+        $plan['runtime_plan_fingerprint'] = PlanFingerprint::runtime(
+            $plan['plan_fingerprint'],
+            $this->desired,
+            $plan
+        );
         return $plan;
     }
 

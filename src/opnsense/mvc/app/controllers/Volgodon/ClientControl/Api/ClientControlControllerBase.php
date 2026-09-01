@@ -75,12 +75,18 @@ abstract class ClientControlControllerBase extends ApiMutableModelControllerBase
         }
     }
 
-    protected function finishMutation(ClientControl $model, $operation, $summary, $extra = [])
-    {
+    protected function finishMutation(
+        ClientControl $model,
+        $operation,
+        $summary,
+        $extra = [],
+        $validationNode = null,
+        $validationPrefix = null
+    ) {
         $previousRevision = ((int) (string) $model->general->revision);
         $model->general->revision = (string)(((int) (string) $model->general->revision) + 1);
         $model->appendAudit($this->getUserName(), $operation, $summary);
-        $validation = $this->validate(null, null, false);
+        $validation = $this->validate($validationNode, $validationPrefix, false);
         if (!empty($validation['validations'])) {
             $model->general->revision = (string)$previousRevision;
             $this->invalidateModel();
@@ -90,6 +96,7 @@ abstract class ClientControlControllerBase extends ApiMutableModelControllerBase
             parent::setSaveAuditMessage(sprintf('Client Control: %s', $summary));
         }
         $this->save(false, true);
+        $model->flushAuditLog();
         return array_merge([
             'result' => 'saved',
             'revision' => ((int) (string) $model->general->revision),
@@ -181,5 +188,26 @@ abstract class ClientControlControllerBase extends ApiMutableModelControllerBase
             );
         }
         return $value;
+    }
+
+    protected function integerValidations(array $payload, array $limits, $prefix, array $labels)
+    {
+        $validations = [];
+        foreach ($limits as $field => $maximum) {
+            if (!array_key_exists($field, $payload)) {
+                continue;
+            }
+            $value = $payload[$field];
+            if ((!is_string($value) && !is_int($value)) ||
+                !preg_match('/^(?:0|[1-9][0-9]*)$/D', (string)$value) ||
+                (int)$value > $maximum) {
+                $validations[$prefix . '.' . $field] = sprintf(
+                    gettext('%s must be a whole number from 0 through %d.'),
+                    gettext($labels[$field] ?? $field),
+                    $maximum
+                );
+            }
+        }
+        return $validations;
     }
 }

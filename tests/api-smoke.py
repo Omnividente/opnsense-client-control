@@ -146,7 +146,8 @@ def exact_apply() -> dict[str, object]:
             "revision": plan["revision"],
             "strategy": "fail",
             "plan_fingerprint": plan["plan_fingerprint"],
-            "confirm_enforce": plan["plan_fingerprint"],
+            "runtime_plan_fingerprint": plan["runtime_plan_fingerprint"],
+            "confirm_enforce": plan["runtime_plan_fingerprint"],
         },
     )
     if applied.get("verified") is not True:

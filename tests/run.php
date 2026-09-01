@@ -14,6 +14,8 @@ require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/ScheduleEvaluator.php';
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/Translations.php';
 require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php';
+require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/AuditLog.php';
+require_once __DIR__ . '/../src/opnsense/mvc/app/library/Volgodon/ClientControl/PlanFingerprint.php';
 
 use Volgodon\ClientControl\Canonical;
 use Volgodon\ClientControl\Compiler;
@@ -21,6 +23,8 @@ use Volgodon\ClientControl\Planner;
 use Volgodon\ClientControl\FirewallHook;
 use Volgodon\ClientControl\ScheduleEvaluator;
 use Volgodon\ClientControl\Platform;
+use Volgodon\ClientControl\AuditLog;
+use Volgodon\ClientControl\PlanFingerprint;
 
 $assertions = 0;
 
@@ -37,6 +41,53 @@ function same($expected, $actual, $message)
 {
     check($expected === $actual, $message . "\nexpected: " . var_export($expected, true) .
         "\nactual: " . var_export($actual, true));
+}
+
+same(200, AuditLog::CONFIG_LIMIT, 'config.xml must retain only the bounded recent audit fallback');
+$auditTemp = tempnam(sys_get_temp_dir(), 'client-control-audit-');
+if ($auditTemp === false || !unlink($auditTemp) || !mkdir($auditTemp, 0700)) {
+    throw new RuntimeException('unable to create audit test directory');
+}
+try {
+    $auditPath = $auditTemp . '/audit.log';
+    $auditLog = new AuditLog($auditPath);
+    $longSummary = str_repeat('full audit detail ', 32);
+    $auditRecord = [
+        'uuid' => '11111111-1111-4111-8111-111111111111',
+        'timestamp' => '2026-09-01T00:00:00Z',
+        'username' => 'operator',
+        'operation' => 'service.rollback',
+        'summary' => $longSummary,
+        'result' => 'error',
+    ];
+    $auditLog->append([$auditRecord]);
+    same($longSummary, $auditLog->read()[0]['summary'],
+        'the external audit log must preserve the complete summary');
+    $auditLog->append([$auditRecord], true);
+    same(1, count($auditLog->read()), 'migration retries must not duplicate audit UUIDs');
+    $configOnly = [
+        'uuid' => '22222222-2222-4222-8222-222222222222',
+        'timestamp' => '2026-09-01T00:01:00Z',
+        'username' => 'operator',
+        'operation' => 'settings.set',
+        'summary' => 'updated module settings',
+        'result' => 'ok',
+    ];
+    $mergedAudit = $auditLog->merge([
+        array_merge($auditRecord, ['summary' => AuditLog::compactSummary($longSummary)]),
+        $configOnly,
+    ]);
+    same(2, count($mergedAudit), 'external and config audit records must merge by UUID');
+    same($longSummary, $mergedAudit[0]['summary'],
+        'the external full summary must take precedence over its config fallback');
+    $compactSummary = AuditLog::compactSummary($longSummary);
+    check(strlen($compactSummary) <= 255, 'the config audit fallback must remain bounded');
+    check(str_ends_with($compactSummary, '...'), 'a truncated config summary must carry a marker');
+} finally {
+    foreach (glob($auditTemp . '/*') ?: [] as $auditFile) {
+        unlink($auditFile);
+    }
+    rmdir($auditTemp);
 }
 
 function groupState($mode = 'unlimited')
@@ -387,6 +438,68 @@ same($resolvedMac['fingerprint'], $unresolvedMac['fingerprint'],
     'runtime MAC resolution must not change the configuration fingerprint');
 check($resolvedMac['runtime_fingerprint'] !== $unresolvedMac['runtime_fingerprint'],
     'runtime MAC resolution must remain visible in the runtime fingerprint');
+$resolvedIntent = PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], []);
+$unresolvedIntent = PlanFingerprint::intent(7, 'enforce', 'fail', $unresolvedMac, [], []);
+same($resolvedIntent, $unresolvedIntent,
+    'ARP resolution must not invalidate the configuration and managed-state plan intent');
+$shaperRawA = [[
+    'core_type' => 'shaper_rule',
+    'core_uuid' => '33333333-3333-4333-8333-333333333333',
+    'core_name' => 'CC_SHAPER',
+    'owned' => true,
+    'ownership_intact' => true,
+    'raw_fields' => [
+        'source' => '192.0.2.20',
+        'destination' => 'any',
+        'interface' => 'wan',
+    ],
+]];
+$shaperRawB = $shaperRawA;
+$shaperRawB[0]['raw_fields']['source'] = '192.0.2.21';
+same(
+    PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $shaperRawA),
+    PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $shaperRawB),
+    'ARP-derived addresses in actual shaper rules must not change the configuration intent'
+);
+$shaperRawB[0]['raw_fields']['interface'] = 'wan2';
+check(
+    PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $shaperRawA) !==
+        PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $shaperRawB),
+    'non-address changes in actual shaper rules must invalidate the configuration intent'
+);
+$filterRawA = [[
+    'core_type' => 'filter_rule',
+    'core_uuid' => '44444444-4444-4444-8444-444444444444',
+    'core_name' => 'CC_FILTER',
+    'owned' => true,
+    'ownership_intact' => true,
+    'raw_fields' => ['source' => 'CC_ALLOWED', 'destination' => 'any'],
+]];
+$filterRawB = $filterRawA;
+$filterRawB[0]['raw_fields']['source'] = 'any';
+check(
+    PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $filterRawA) !==
+        PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], $filterRawB),
+    'configured filter matches must remain part of the configuration intent'
+);
+$resolvedRuntimePlan = PlanFingerprint::runtime($resolvedIntent, $resolvedMac, [
+    'operations' => array_values($resolvedMac['shaper_rules']),
+    'conflicts' => [],
+]);
+$unresolvedRuntimePlan = PlanFingerprint::runtime($unresolvedIntent, $unresolvedMac, [
+    'operations' => [],
+    'conflicts' => [],
+]);
+check($resolvedRuntimePlan !== $unresolvedRuntimePlan,
+    'ARP resolution changes must invalidate the exact runtime diff');
+$changedActualIntent = PlanFingerprint::intent(7, 'enforce', 'fail', $resolvedMac, [], [[
+    'core_type' => 'alias',
+    'core_uuid' => '33333333-3333-4333-8333-333333333333',
+    'core_name' => 'CC_CHANGED',
+    'raw_fields' => ['content' => '192.0.2.200'],
+]]);
+check($resolvedIntent !== $changedActualIntent,
+    'actual managed-object changes must invalidate the plan intent');
 
 $unlimited = $compiler->compileState(moduleState(true, 'enforce', 'unlimited'));
 same([], $unlimited['pipes'], 'unlimited groups must not compile pipes');
@@ -509,6 +622,23 @@ try {
     $acceptRejected = true;
 }
 check($acceptRejected, 'external drift can only be preserved as a conflict or explicitly restored');
+$modelDefinition = simplexml_load_file(
+    __DIR__ . '/../src/opnsense/mvc/app/models/Volgodon/ClientControl/ClientControl.xml'
+);
+check($modelDefinition !== false, 'the Client Control model must be valid XML');
+$modelVersion = (string)$modelDefinition->version;
+same('1.0.3', $modelVersion, 'the external audit migration must advance the model version');
+$modelVersionParts = array_map('intval', explode('.', $modelVersion));
+for ($patchVersion = 1; $patchVersion <= $modelVersionParts[2]; $patchVersion++) {
+    $migrationFile = sprintf(
+        '%s/../src/opnsense/mvc/app/models/Volgodon/ClientControl/Migrations/M%d_%d_%d.php',
+        __DIR__,
+        $modelVersionParts[0],
+        $modelVersionParts[1],
+        $patchVersion
+    );
+    check(is_file($migrationFile), 'the model migration chain must include ' . basename($migrationFile));
+}
 
 $generalForm = simplexml_load_file(
     __DIR__ . '/../src/opnsense/mvc/app/controllers/Volgodon/ClientControl/forms/general.xml'

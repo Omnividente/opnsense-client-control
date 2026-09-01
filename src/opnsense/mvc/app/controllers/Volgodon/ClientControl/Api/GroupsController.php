@@ -40,6 +40,17 @@ class GroupsController extends ClientControlControllerBase
         'packet_rate' => 4294967,
         'packet_rate_seconds' => 2147483647,
     ];
+    private const INTEGER_LABELS = [
+        'download' => 'Download limit',
+        'upload' => 'Upload limit',
+        'max_states' => 'Maximum open connections',
+        'max_tcp_connections' => 'Maximum TCP connections',
+        'connection_rate' => 'New TCP connections',
+        'connection_rate_seconds' => 'TCP interval, seconds',
+        'packet_rate' => 'Packets per interval',
+        'packet_rate_seconds' => 'Packet interval, seconds',
+    ];
+
 
 
     public function searchGroupAction()
@@ -122,8 +133,19 @@ class GroupsController extends ClientControlControllerBase
         $model = $this->lockModel();
         try {
             $this->assertRevision($model);
+            $payload = $this->getRequiredArray('group');
+            $validations = $this->integerValidations(
+                $payload,
+                self::INTEGER_LIMITS,
+                'group',
+                self::INTEGER_LABELS
+            );
+            if ($validations !== []) {
+                return ['result' => 'failed', 'validations' => $validations];
+            }
             $group = $model->groups->group->Add();
-            $group->setNodes($this->groupFields($this->getRequiredArray('group')));
+            $group->setNodes($this->groupFields($payload));
+
             $uuid = $group->getAttribute('uuid');
             return $this->finishMutation(
                 $model,
@@ -149,7 +171,18 @@ class GroupsController extends ClientControlControllerBase
             if ($group === null) {
                 throw new UserException(gettext('The group no longer exists.'), gettext('Client Control'));
             }
-            $group->setNodes($this->groupFields($this->getRequiredArray('group')));
+            $payload = $this->getRequiredArray('group');
+            $validations = $this->integerValidations(
+                $payload,
+                self::INTEGER_LIMITS,
+                'group',
+                self::INTEGER_LABELS
+            );
+            if ($validations !== []) {
+                return ['result' => 'failed', 'validations' => $validations];
+            }
+            $group->setNodes($this->groupFields($payload));
+
             return $this->finishMutation(
                 $model,
                 'group.set',
@@ -268,20 +301,10 @@ class GroupsController extends ClientControlControllerBase
     private function groupFields($payload)
     {
         $fields = array_intersect_key($payload, array_flip(self::GROUP_FIELDS));
-        foreach (self::INTEGER_LIMITS as $field => $maximum) {
-            if (!array_key_exists($field, $fields)) {
-                continue;
+        foreach (array_keys(self::INTEGER_LIMITS) as $field) {
+            if (array_key_exists($field, $fields)) {
+                $fields[$field] = (string)$fields[$field];
             }
-            $value = $fields[$field];
-            if ((!is_string($value) && !is_int($value)) ||
-                !preg_match('/^(?:0|[1-9][0-9]*)$/D', (string)$value) ||
-                (int)$value > $maximum) {
-                throw new UserException(
-                    sprintf(gettext('%s must be a whole number from 0 through %d.'), $field, $maximum),
-                    gettext('Client Control')
-                );
-            }
-            $fields[$field] = (string)$value;
         }
         return $fields;
     }
