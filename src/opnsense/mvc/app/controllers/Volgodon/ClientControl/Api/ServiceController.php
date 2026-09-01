@@ -195,11 +195,10 @@ class ServiceController extends ClientControlControllerBase
         ];
     }
 
-    private function reloadRuntime($flushIpFw = false, ClientControl $model = null)
+    private function reloadRuntime($flushIpFw = false, ClientControl $model = null, $backend = null)
     {
-        $backend = new Backend();
+        $backend = $backend ?? new Backend();
         $backend->configdRun('template reload OPNsense/Filter');
-        $filter = trim($backend->configdRun('filter reload skip_alias'));
         $aliasOutput = trim($backend->configdRun('filter refresh_aliases'));
         $aliasResult = json_decode($aliasOutput, true);
         if (is_array($aliasResult) && !empty($aliasResult['messages'])) {
@@ -234,6 +233,10 @@ class ServiceController extends ClientControlControllerBase
         $ipfw = trim($backend->configdRun('ipfw reload'));
         if ($ipfw !== 'OK') {
             throw new UserException(sprintf(gettext('IPFW reload failed: %s'), $ipfw), gettext('Client Control'));
+        }
+        $filter = trim($backend->configdRun('filter reload skip_alias'));
+        if ($filter !== 'OK') {
+            throw new UserException(sprintf(gettext('Firewall reload failed: %s'), $filter), gettext('Client Control'));
         }
         $schedule = json_decode(trim($backend->configdRun('clientcontrol schedule')), true);
         if (!is_array($schedule) || ($schedule['status'] ?? '') !== 'ok') {

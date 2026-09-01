@@ -523,6 +523,52 @@ check(
     'the fixed stale-neighbor policy must not be serialized as an editable settings field'
 );
 
+$acl = simplexml_load_file(
+    __DIR__ . '/../src/opnsense/mvc/app/models/Volgodon/ClientControl/ACL/ACL.xml'
+);
+check($acl !== false, 'the Client Control ACL must be valid XML');
+$aclPatterns = ['clientcontrol-view' => [], 'clientcontrol-manage' => []];
+foreach ($aclPatterns as $privilege => &$patterns) {
+    foreach ($acl->$privilege->patterns->pattern as $pattern) {
+        $patterns[] = (string)$pattern;
+    }
+}
+unset($patterns);
+$mutationPrefixes = ['add', 'set', 'del', 'toggle', 'bulk', 'copy', 'apply', 'reconcile'];
+$apiControllerRoot = __DIR__ . '/../src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api';
+foreach (glob($apiControllerRoot . '/*Controller.php') as $controllerFile) {
+    if (basename($controllerFile) === 'ClientControlControllerBase.php') {
+        continue;
+    }
+    $controller = strtolower(preg_replace('/Controller\.php$/', '', basename($controllerFile)));
+    preg_match_all('/public\s+function\s+([A-Za-z0-9_]+)Action\s*\(/', file_get_contents($controllerFile), $actions);
+    foreach ($actions[1] as $method) {
+        $action = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $method));
+        $route = 'api/clientcontrol/' . $controller . '/' . $action;
+        $isMutation = false;
+        foreach ($mutationPrefixes as $prefix) {
+            if ($action === $prefix || str_starts_with($action, $prefix . '_')) {
+                $isMutation = true;
+                break;
+            }
+        }
+        foreach ($aclPatterns as $privilege => $patterns) {
+            $covered = false;
+            foreach ($patterns as $pattern) {
+                if (fnmatch($pattern, $route)) {
+                    $covered = true;
+                    break;
+                }
+            }
+            if ($isMutation && $privilege === 'clientcontrol-view') {
+                same(false, $covered, 'read-only ACL must not cover mutation route ' . $route);
+            } else {
+                check($covered, $privilege . ' ACL must cover route ' . $route);
+            }
+        }
+    }
+}
+
 require __DIR__ . '/controller-load.php';
 
 if (extension_loaded('gettext')) {

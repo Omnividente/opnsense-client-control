@@ -2044,3 +2044,20 @@ msgstr "Будут импортированы отключёнными"
 #, php-format
 msgid "Group %s is fail-closed because this firewall backend does not support packet-rate limits."
 msgstr "Группа %s закрыта по безопасному сценарию, потому что этот backend межсетевого экрана не поддерживает ограничение скорости пакетов."
+
+#: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ServiceController.php
+#, php-format
+msgid "Firewall reload failed: %s"
+msgstr "Сбой перезагрузки межсетевого экрана: %s"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Managed objects have not been deeply checked in this browser session."
+msgstr "В этой сессии браузера управляемые объекты ещё не проходили глубокую проверку."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Run deep check"
+msgstr "Запустить глубокую проверку"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The latest deep check found no managed-object conflicts."
+msgstr "Последняя глубокая проверка не обнаружила конфликтов управляемых объектов."

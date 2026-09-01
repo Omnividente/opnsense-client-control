@@ -25,6 +25,7 @@ $(document).ready(function () {
     const state = {
         revision: 0,
         lastPlan: null,
+        deepCheckRevision: null,
         hasGroups: false,
         importPreview: null
     };
@@ -244,6 +245,7 @@ $(document).ready(function () {
         const staleMessage = '{{ lang._('The configuration changed after this page was loaded. Reload and retry.') }}';
         if ((xhr && xhr.status === 409) || message.indexOf(staleMessage) !== -1) {
             state.lastPlan = null;
+            state.deepCheckRevision = null;
             $('#apply-plan').prop('disabled', true);
             ajaxGet('/api/clientcontrol/service/status', {}, function (data) {
                 if (data && data.revision !== undefined) {
@@ -464,6 +466,7 @@ $(document).ready(function () {
 
     function markDirty(message) {
         state.lastPlan = null;
+        state.deepCheckRevision = null;
         $('#apply-plan').prop('disabled', true);
         setBanner('warning', message || '{{ lang._('Changes saved. Check and apply them when ready.') }}');
         refreshStatus();
@@ -497,10 +500,19 @@ $(document).ready(function () {
         }, 150);
     });
 
+    function setDeepCheckStatus(kind, message) {
+        $('#cc-deep-check')
+            .removeClass('alert-info alert-success alert-warning alert-danger')
+            .addClass('alert-' + kind)
+            .show();
+        $('#cc-deep-check-message').text(message);
+    }
+
     function refreshStatus() {
         getJson('/api/clientcontrol/service/status').done(function (data) {
             state.revision = Number(data.revision || 0);
             $('#cc-revision').text(data.revision);
+            $('#cc-applied-revision').text(data.last_applied_revision);
             $('#cc-sync')
                 .text(translatedLabel(stateLabels, data.sync_state))
                 .attr('class', 'label ' + (data.sync_state === 'in_sync' ? 'label-success' : 'label-warning'));
@@ -508,17 +520,24 @@ $(document).ready(function () {
                 .text(translatedLabel(stateLabels, data.status || 'never'))
                 .attr('class', 'label ' +
                     (data.status === 'ok' ? 'label-success' :
-                        (data.status === 'error' ? 'label-danger' : 'label-default')));
+                        (data.status === 'error' || data.status === 'conflict' ? 'label-danger' : 'label-default')));
             const conflicts = data.conflicts || [];
-            $('#cc-last-message').text(
-                conflicts.length ? conflicts.map(function (conflict) { return conflict.message; }).join(' | ') :
-                    (data.last_apply_time ? '{{ lang._('Last applied') }}: ' + formatDateTime(data.last_apply_time) : '')
-            );
+            const lastMessage = conflicts.length
+                ? conflicts.map(function (conflict) { return conflict.message; }).join(' | ')
+                : ((data.status === 'error' || data.status === 'conflict') && data.last_apply_message
+                    ? data.last_apply_message
+                    : (data.last_apply_time ? '{{ lang._('Last applied') }}: ' + formatDateTime(data.last_apply_time) : ''));
+            $('#cc-last-message').text(lastMessage);
             $('#cc-managed-count').text(Object.values(data.managed_objects || {}).reduce(function (sum, value) {
                 return sum + Number(value);
             }, 0));
             const platformWarning = (data.platform || {}).warning || '';
             $('#cc-platform-warning').toggle(platformWarning !== '').text(platformWarning);
+            if (!data.deep_check_required) {
+                $('#cc-deep-check').hide();
+            } else if (state.deepCheckRevision !== Number(data.revision)) {
+                setDeepCheckStatus('warning', '{{ lang._('Managed objects have not been deeply checked in this browser session.') }}');
+            }
         });
     }
 
@@ -711,6 +730,32 @@ $(document).ready(function () {
         $('#plan-json').text(renderTechnicalPlan(plan));
     }
 
+    function acceptPlan(data) {
+        state.lastPlan = data;
+        state.deepCheckRevision = Number(data.revision);
+        renderPlan(data);
+        const hasChanges = (data.operations || []).some(function (operation) {
+            return operation.action !== 'noop';
+        });
+        $('#apply-plan').prop('disabled', data.status !== 'ok' || !hasChanges);
+        const conflicts = data.conflicts || [];
+        const notices = data.notices || [];
+        const messages = conflicts.concat(notices).map(function (item) {
+            return item.message;
+        });
+        if (conflicts.length) {
+            setDeepCheckStatus('danger', messages.join(' | '));
+        } else if (notices.length) {
+            setDeepCheckStatus('warning', messages.join(' | '));
+        } else {
+            setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
+        }
+    }
+
+    function requestPlan() {
+        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()}).done(acceptPlan);
+    }
+
     function renderImportPreview(data) {
         const groups = data.groups || [];
         const clients = data.clients || [];
@@ -749,15 +794,8 @@ $(document).ready(function () {
         $('#import-preview-json').text(renderJson(data));
     }
 
-    $('#run-plan').click(function () {
-        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()}).done(function (data) {
-            state.lastPlan = data;
-            renderPlan(data);
-            const hasChanges = (data.operations || []).some(function (operation) {
-                return operation.action !== 'noop';
-            });
-            $('#apply-plan').prop('disabled', data.status !== 'ok' || !hasChanges);
-        });
+    $('#run-plan, #run-deep-check').click(function () {
+        requestPlan();
     });
 
     $('#apply-plan').click(function () {
@@ -782,9 +820,15 @@ $(document).ready(function () {
             '{{ lang._('Cancel') }}',
             function () {
                 postJson('/api/clientcontrol/service/apply', payload).done(function (data) {
+                    if (!data || data.result !== 'applied' || data.verified !== true) {
+                        setBanner('danger', (data && (data.errorMessage || data.message)) || '{{ lang._('Request failed.') }}');
+                        return;
+                    }
                     state.lastPlan = null;
+                    state.deepCheckRevision = Number(data.revision);
                     $('#apply-plan').prop('disabled', true);
                     setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
+                    setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
                     $('#plan-json').text(renderTechnicalPlan(data));
                     refreshStatus();
                 });
@@ -950,6 +994,10 @@ $(document).ready(function () {
     <span class="text-muted" id="cc-last-message"></span>
 </div>
 <div id="cc-platform-warning" class="alert alert-warning" style="display:none"></div>
+<div id="cc-deep-check" class="alert alert-warning clearfix" style="display:none">
+    <span id="cc-deep-check-message"></span>
+    <button id="run-deep-check" type="button" class="btn btn-default btn-xs pull-right"><i class="fa fa-search"></i> {{ lang._('Run deep check') }}</button>
+</div>
 
 <ul class="nav nav-tabs" role="tablist">
     <li class="active"><a href="#cc-general" data-toggle="tab">{{ lang._('Settings') }}</a></li>
