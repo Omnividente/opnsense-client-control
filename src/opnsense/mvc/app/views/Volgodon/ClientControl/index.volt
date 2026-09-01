@@ -536,12 +536,9 @@ $(document).ready(function () {
                 .attr('class', 'label ' +
                     (data.status === 'ok' ? 'label-success' :
                         (data.status === 'error' || data.status === 'conflict' ? 'label-danger' : 'label-default')));
-            const conflicts = data.conflicts || [];
-            const lastMessage = conflicts.length
-                ? conflicts.map(function (conflict) { return conflict.message; }).join(' | ')
-                : ((data.status === 'error' || data.status === 'conflict') && data.last_apply_message
-                    ? data.last_apply_message
-                    : (data.last_apply_time ? '{{ lang._('Last applied') }}: ' + formatDateTime(data.last_apply_time) : ''));
+            const lastMessage = (data.status === 'error' || data.status === 'conflict') && data.last_apply_message
+                ? data.last_apply_message
+                : (data.last_apply_time ? '{{ lang._('Last applied') }}: ' + formatDateTime(data.last_apply_time) : '');
             $('#cc-last-message').text(lastMessage);
             $('#cc-managed-count').text(Object.values(data.managed_objects || {}).reduce(function (sum, value) {
                 return sum + Number(value);
