@@ -139,6 +139,19 @@ if (is_file('/usr/local/etc/inc/config.inc')) {
         'a committed mutation must expose external audit degradation in its response');
     same('audit unavailable', $degradedAudit['audit_log_message'],
         'the audit degradation response must carry an operator-visible explanation');
+    $shallowStatus = $serviceController->statusAction();
+    check(!array_key_exists('conflicts', $shallowStatus),
+        'the shallow status endpoint must not claim an empty deep conflict result');
+    same(true, $shallowStatus['deep_check_required'],
+        'the shallow status endpoint must direct callers to the explicit deep check');
+    $diagnosticsReflection = new ReflectionClass(Volgodon\ClientControl\Api\DiagnosticsController::class);
+    $diagnosticsController = $diagnosticsReflection->newInstanceWithoutConstructor();
+    $diagnosticsController->request = new OPNsense\Mvc\Request();
+    $auditPage = $diagnosticsController->auditAction();
+    same(Volgodon\ClientControl\AuditLog::CONFIG_LIMIT, $auditPage['history_window'],
+        'interactive audit API responses must declare their bounded history window');
+    check(count($auditPage['rows']) <= Volgodon\ClientControl\AuditLog::CONFIG_LIMIT,
+        'interactive audit API responses must not read past the bounded history window');
     $reloadRuntime = $serviceReflection->getMethod('reloadRuntime');
     $reloadRuntime->setAccessible(true);
     $backend = $fakeBackend();

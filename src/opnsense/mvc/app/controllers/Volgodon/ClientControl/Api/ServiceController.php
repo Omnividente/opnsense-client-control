@@ -173,7 +173,6 @@ class ServiceController extends ClientControlControllerBase
                 'last_apply_message' => Translations::countSummary((string)$model->general->last_apply_message),
                 'managed_objects' => $counts,
                 'health_status' => in_array($syncState, ['error', 'conflict'], true) ? $syncState : 'ok',
-                'conflicts' => [],
                 'deep_check_required' => true,
                 'platform' => $platform,
             ], $auditLog);

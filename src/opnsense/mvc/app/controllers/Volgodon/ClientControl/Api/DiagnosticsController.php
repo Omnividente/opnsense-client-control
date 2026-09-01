@@ -165,7 +165,7 @@ class DiagnosticsController extends ClientControlControllerBase
 
     public function auditAction()
     {
-        $audit = $this->auditRecords($this->getModel());
+        $audit = $this->auditRecords($this->getModel(), AuditLog::CONFIG_LIMIT);
         $records = [];
         foreach ($audit['records'] as $entry) {
             $records[] = [
@@ -179,7 +179,8 @@ class DiagnosticsController extends ClientControlControllerBase
         }
         return array_merge(
             $this->searchRecordsetBase($records, null, 'timestamp', null, SORT_NATURAL | SORT_FLAG_CASE),
-            $this->auditLogResponse($audit['audit_log'] === 'ok', $audit['audit_log_message'])
+            $this->auditLogResponse($audit['audit_log'] === 'ok', $audit['audit_log_message']),
+            ['history_window' => AuditLog::CONFIG_LIMIT]
         );
     }
 
@@ -199,7 +200,7 @@ class DiagnosticsController extends ClientControlControllerBase
         ], $this->auditLogResponse($audit['audit_log'] === 'ok', $audit['audit_log_message']));
     }
 
-    private function auditRecords($model)
+    private function auditRecords($model, $limit = null)
     {
         $configRecords = [];
         foreach ($model->audit->entry->iterateItems() as $uuid => $entry) {
@@ -216,7 +217,7 @@ class DiagnosticsController extends ClientControlControllerBase
             $auditLog = new AuditLog();
             $auditLog->probe();
             return array_merge(
-                ['records' => $auditLog->merge($configRecords)],
+                ['records' => $auditLog->merge($configRecords, $limit)],
                 $this->auditLogResponse(true)
             );
         } catch (\Throwable $error) {

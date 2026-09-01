@@ -50,7 +50,15 @@ if ($auditTemp === false || !unlink($auditTemp) || !mkdir($auditTemp, 0700)) {
 }
 try {
     $auditPath = $auditTemp . '/audit.log';
-    $auditLog = new AuditLog($auditPath);
+    $auditLog = new class($auditPath) extends AuditLog {
+        public $filesRead = [];
+
+        protected function readNewestFile($filename, $limit, array &$records, array &$known)
+        {
+            $this->filesRead[] = $filename;
+            parent::readNewestFile($filename, $limit, $records, $known);
+        }
+    };
     $longSummary = str_repeat('full audit detail ', 32);
     $auditRecord = [
         'uuid' => '11111111-1111-4111-8111-111111111111',
@@ -84,6 +92,54 @@ try {
     $compactSummary = AuditLog::compactSummary($longSummary);
     check(strlen($compactSummary) <= 255, 'the config audit fallback must remain bounded');
     check(str_ends_with($compactSummary, '...'), 'a truncated config summary must carry a marker');
+    $newestRecord = array_merge($auditRecord, [
+        'uuid' => '33333333-3333-4333-8333-333333333333',
+        'timestamp' => '2026-09-01T00:02:00Z',
+        'operation' => 'settings.set',
+        'summary' => str_repeat('newest current detail ', 500),
+        'result' => 'ok',
+    ]);
+    $auditLog->append([$newestRecord]);
+    $rotatedOlder = array_merge($auditRecord, [
+        'uuid' => '44444444-4444-4444-8444-444444444444',
+        'timestamp' => '2025-12-30T00:00:00Z',
+        'summary' => 'older rotated record',
+    ]);
+    $rotatedNewer = array_merge($auditRecord, [
+        'uuid' => '55555555-5555-4555-8555-555555555555',
+        'timestamp' => '2025-12-31T00:00:00Z',
+        'summary' => 'newer rotated record',
+    ]);
+    $oldestRecord = array_merge($auditRecord, [
+        'uuid' => '66666666-6666-4666-8666-666666666666',
+        'timestamp' => '2025-01-01T00:00:00Z',
+        'summary' => 'oldest generation record',
+    ]);
+    file_put_contents(
+        $auditPath . '.0',
+        json_encode($rotatedOlder) . "\n" . json_encode($rotatedNewer) . "\n"
+    );
+    file_put_contents($auditPath . '.1', json_encode($oldestRecord) . "\n");
+    $boundedAudit = $auditLog->read(3);
+    same(3, count($boundedAudit), 'interactive audit reads must stop at the requested window');
+    same($newestRecord['uuid'], $boundedAudit[0]['uuid'],
+        'bounded audit reads must start at the newest current-file record');
+    same($newestRecord['summary'], $boundedAudit[0]['summary'],
+        'bounded reverse reads must preserve a JSON record spanning multiple chunks');
+    same($rotatedNewer['uuid'], $boundedAudit[2]['uuid'],
+        'bounded audit reads must continue from the newest line in the next rotation');
+    same([$auditPath, $auditPath . '.0'], $auditLog->filesRead,
+        'bounded audit reads must not open generations older than the requested window');
+    $boundedMerge = $auditLog->merge([
+        array_merge($auditRecord, ['summary' => AuditLog::compactSummary($longSummary)]),
+        $configOnly,
+    ], 2);
+    same([$newestRecord['uuid'], $configOnly['uuid']], array_column($boundedMerge, 'uuid'),
+        'bounded audit merge must return the latest unique records across file and config fallbacks');
+    $fullAudit = $auditLog->read();
+    same(5, count($fullAudit), 'unbounded audit export reads must retain every generation');
+    check(in_array($oldestRecord['uuid'], array_column($fullAudit, 'uuid'), true),
+        'unbounded audit export must include the oldest retained generation');
     file_put_contents($auditTemp . '/not-a-directory', 'blocked');
     $probeFailed = false;
     try {

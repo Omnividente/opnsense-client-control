@@ -107,11 +107,17 @@ class AuditLog
     /**
      * Combine retained config records with the longer file-backed history.
      */
-    public function merge(array $configRecords)
+    public function merge(array $configRecords, $limit = null)
     {
+        if ($limit !== null) {
+            $limit = max(0, (int)$limit);
+            if ($limit === 0) {
+                return [];
+            }
+        }
         $records = [];
         $known = [];
-        foreach (array_merge($this->read(), $configRecords) as $record) {
+        foreach (array_merge($this->read($limit), $configRecords) as $record) {
             $record = $this->normalize($record);
             if ($record === null) {
                 continue;
@@ -122,14 +128,23 @@ class AuditLog
                 $records[] = $record;
             }
         }
+        if ($limit !== null) {
+            usort($records, function ($left, $right) {
+                return [$right['timestamp'], $right['uuid']] <=> [$left['timestamp'], $left['uuid']];
+            });
+            $records = array_slice($records, 0, $limit);
+        }
         return $records;
     }
 
     /**
      * Read the current JSON-lines file and uncompressed newsyslog generations.
      */
-    public function read()
+    public function read($limit = null)
     {
+        if ($limit !== null) {
+            return $this->readNewest(max(0, (int)$limit));
+        }
         $records = [];
         $known = [];
         foreach ($this->files() as $filename) {
@@ -139,21 +154,94 @@ class AuditLog
             }
             try {
                 while (($line = fgets($handle)) !== false) {
-                    $record = $this->normalize(json_decode(trim($line), true));
-                    if ($record === null) {
-                        continue;
-                    }
-                    $key = $this->recordKey($record);
-                    if (!isset($known[$key])) {
-                        $known[$key] = true;
-                        $records[] = $record;
-                    }
+                    $this->appendDecodedLine($line, $records, $known);
                 }
             } finally {
                 fclose($handle);
             }
         }
         return $records;
+    }
+
+    private function readNewest($limit)
+    {
+        if ($limit === 0) {
+            return [];
+        }
+        $records = [];
+        $known = [];
+        foreach ($this->files() as $filename) {
+            $this->readNewestFile($filename, $limit, $records, $known);
+            if (count($records) >= $limit) {
+                break;
+            }
+        }
+        return $records;
+    }
+
+    protected function readNewestFile($filename, $limit, array &$records, array &$known)
+    {
+        $handle = @fopen($filename, 'rb');
+        if ($handle === false) {
+            throw new RuntimeException('Unable to read the Client Control audit log.');
+        }
+        if (!flock($handle, LOCK_SH)) {
+            fclose($handle);
+            throw new RuntimeException('Unable to lock the Client Control audit log for reading.');
+        }
+        try {
+            if (fseek($handle, 0, SEEK_END) !== 0) {
+                throw new RuntimeException('Unable to seek in the Client Control audit log.');
+            }
+            $position = ftell($handle);
+            if ($position === false) {
+                throw new RuntimeException('Unable to inspect the Client Control audit log size.');
+            }
+            $buffer = '';
+            while ($position > 0 && count($records) < $limit) {
+                $length = min(8192, $position);
+                $position -= $length;
+                if (fseek($handle, $position, SEEK_SET) !== 0) {
+                    throw new RuntimeException('Unable to seek in the Client Control audit log.');
+                }
+                $chunk = fread($handle, $length);
+                if ($chunk === false || strlen($chunk) !== $length) {
+                    throw new RuntimeException('Unable to read the Client Control audit log.');
+                }
+                $buffer = $chunk . $buffer;
+                while (($newline = strrpos($buffer, "\n")) !== false) {
+                    $line = substr($buffer, $newline + 1);
+                    $buffer = substr($buffer, 0, $newline);
+                    if ($line !== '') {
+                        $this->appendDecodedLine($line, $records, $known);
+                    }
+                    if (count($records) >= $limit) {
+                        return;
+                    }
+                }
+            }
+            if ($position === 0 && $buffer !== '' && count($records) < $limit) {
+                $this->appendDecodedLine($buffer, $records, $known);
+            }
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+    }
+
+    private function appendDecodedLine($line, array &$records, array &$known)
+    {
+        $record = $this->normalize(json_decode(trim($line), true));
+        if ($record === null) {
+            return false;
+        }
+        $key = $this->recordKey($record);
+        if (isset($known[$key])) {
+            return false;
+        }
+        $known[$key] = true;
+        $records[] = $record;
+        return true;
     }
 
     public static function compactSummary($summary, $limit = 255)
