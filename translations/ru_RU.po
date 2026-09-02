@@ -2090,3 +2090,8 @@ msgstr "Изменение отменено, но записать полный 
 #: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/DiagnosticsController.php
 msgid "The full audit history is unavailable. Only the bounded config.xml history is shown and exported."
 msgstr "Полный журнал аудита недоступен. На экране и в экспорте показана только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+#, php-format
+msgid "The table is limited to the latest %s records. Full history is available through JSON export."
+msgstr "Таблица ограничена последними %s записями. Полная история доступна через экспорт JSON."

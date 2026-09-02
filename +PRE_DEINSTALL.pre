@@ -2,7 +2,7 @@
 set -eu
 UNINSTALL_MARKER=/var/run/clientcontrol-uninstalling
 touch "$UNINSTALL_MARKER"
-rm -f /var/lib/php/cache/*volgodon_clientcontrol*.volt.php
+rm -f /usr/local/opnsense/mvc/app/cache/*volgodon_clientcontrol*.volt.php
 rm -f /var/run/clientcontrol-schedule.json /var/run/clientcontrol-schedule.lock
 
 

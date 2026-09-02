@@ -72,13 +72,12 @@ try {
     } catch (Throwable $error) {
         $auditLog = ['status' => 'degraded', 'message' => $error->getMessage()];
     }
-    $status = $auditLog['status'] === 'ok' ? 'ok' : 'degraded';
     echo json_encode([
-        'status' => $status,
+        'status' => 'ok',
         'objects' => $counts,
         'audit_log' => $auditLog,
     ], JSON_UNESCAPED_SLASHES) . PHP_EOL;
-    exit($status === 'ok' ? 0 : 1);
+    exit(0);
 } catch (Throwable $error) {
     fwrite(STDERR, $error->getMessage() . PHP_EOL);
     exit(1);

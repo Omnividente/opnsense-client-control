@@ -240,6 +240,9 @@ $(document).ready(function () {
         if (data && data.audit_log === 'degraded') {
             state.auditLogDegraded = true;
             state.auditLogMessage = data.audit_log_message || '{{ lang._('The full audit history is unavailable. Only the bounded config.xml history is available.') }}';
+        } else if (data && data.audit_log === 'ok') {
+            state.auditLogDegraded = false;
+            state.auditLogMessage = '';
         }
         $('#cc-audit-warning')
             .toggle(state.auditLogDegraded)
@@ -977,6 +980,12 @@ $(document).ready(function () {
                 tr.append($('<td/>').text(translatedLabel(resultLabels, entry.result)));
                 tbody.append(tr);
             });
+            const historyWindow = Number(data.history_window || 0);
+            $('#audit-window-note')
+                .toggle(historyWindow > 0)
+                .text(historyWindow > 0
+                    ? '{{ lang._('The table is limited to the latest %s records. Full history is available through JSON export.') }}'.replace('%s', String(historyWindow))
+                    : '');
         });
     });
 
@@ -1170,6 +1179,7 @@ $(document).ready(function () {
             <button id="export-audit" class="btn btn-default"><i class="fa fa-download"></i> {{ lang._('Export JSON') }}</button>
         </div>
         <div class="table-responsive"><table class="table table-condensed table-striped"><thead><tr><th>{{ lang._('Date and time') }}</th><th>{{ lang._('User') }}</th><th>{{ lang._('Action') }}</th><th>{{ lang._('Details') }}</th><th>{{ lang._('Result') }}</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+        <p id="audit-window-note" class="text-muted" style="display:none"></p>
     </div>
 </div>
 

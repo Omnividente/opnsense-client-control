@@ -166,6 +166,20 @@ rollback_dir="$stage/rollback"
 had_installed=false
 rollback=
 
+health_status_ok() {
+    case "$1" in
+        '{"status":"ok",'*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+audit_log_degraded() {
+    case "$1" in
+        *'"audit_log":{"status":"degraded"'*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 health() {
     /usr/local/sbin/pkg info -e "$package_name" || return 1
     /usr/local/sbin/pkg check -s "$package_name" >/dev/null || return 1
@@ -174,9 +188,13 @@ health() {
     /usr/local/bin/php -r 'require_once "/usr/local/etc/inc/config.inc"; foreach (["Volgodon\\ClientControl\\IndexController", "Volgodon\\ClientControl\\Api\\ServiceController"] as $class) { new ReflectionClass($class); }' >/dev/null || return 1
     case "$(/usr/local/sbin/opnsense-version -a)" in "$target_version"*) ;; *) return 1 ;; esac
     direct_health=$(/usr/local/opnsense/scripts/Volgodon/ClientControl/health.php) || return 1
-    case "$direct_health" in *'"status":"ok"'*) ;; *) return 1 ;; esac
+    health_status_ok "$direct_health" || return 1
     configd_health=$(/usr/local/sbin/configctl clientcontrol health) || return 1
-    case "$configd_health" in *'"status":"ok"'*) ;; *) return 1 ;; esac
+    health_status_ok "$configd_health" || return 1
+    if audit_log_degraded "$direct_health" || audit_log_degraded "$configd_health"; then
+        echo 'warning: Client Control audit history is degraded; the healthy package remains installed.' >&2
+        echo "$direct_health" >&2
+    fi
 }
 
 if /usr/local/sbin/pkg info -e "$package_name"; then

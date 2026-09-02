@@ -37,6 +37,7 @@ jobs:
             gettext \
             libxml2-utils \
             locales \
+            nodejs \
             php-cli \
             php-xml \
             shellcheck
@@ -69,6 +70,6 @@ jobs:
             echo "- Result: \`$CHECK_RESULT\`"
             echo "- Reviewed revision: \`$REVIEWED_SHA\`"
             echo '- Runner: GitHub-hosted Ubuntu 24.04'
-            echo '- Covered: positive and negative PHP lint, workflow policy, PHP/Python/shell/XML syntax, model tests, translations, generated-file consistency.'
+            echo '- Covered: positive and negative PHP lint, workflow policy, PHP/Python/JavaScript/shell/XML syntax, model tests, UI state transitions, deploy health contracts, translations, generated-file consistency.'
             echo '- Not covered: installation on TING/OPNsense, firewall reload, packet flow, shaping speed, or rollback on a real appliance.'
           } >> "$GITHUB_STEP_SUMMARY"

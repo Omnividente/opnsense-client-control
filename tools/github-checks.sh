@@ -4,6 +4,7 @@ set -eu
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 PHP=${PHP:-php}
 PYTHON=${PYTHON:-python3}
+NODE=${NODE:-node}
 SHELLCHECK=${SHELLCHECK:-shellcheck}
 XMLLINT=${XMLLINT:-xmllint}
 ACTIONLINT=${ACTIONLINT:-actionlint}
@@ -11,7 +12,7 @@ TMP=
 
 cd "$ROOT"
 
-for tool in git msgfmt find xargs sed "$PHP" "$PYTHON" "$SHELLCHECK" "$XMLLINT" "$ACTIONLINT"; do
+for tool in git msgfmt find xargs sed "$PHP" "$PYTHON" "$NODE" "$SHELLCHECK" "$XMLLINT" "$ACTIONLINT"; do
     command -v "$tool" >/dev/null 2>&1 || {
         echo "missing GitHub review tool: $tool" >&2
         exit 1
@@ -25,6 +26,7 @@ tool_versions() {
     git --version
     "$PHP" -r 'echo "PHP ", PHP_VERSION, "\n";'
     "$PYTHON" --version 2>&1
+    "$NODE" --version
     "$SHELLCHECK" --version | sed -n '2p'
     "$XMLLINT" --version 2>&1 | sed -n '1p'
     msgfmt --version | sed -n '1p'
@@ -74,6 +76,8 @@ find src -type f -name '*.xml' -exec "$XMLLINT" --noout {} +
 
 git ls-files -z -- '*.sh' '+*.pre' '+*.post' |
     xargs -0 -r "$SHELLCHECK"
+sh tests/deploy-health-contract.sh
+"$NODE" tests/ui-contract.mjs
 
 for executable_hook in \
     src/etc/rc.syshook.d/start/90-clientcontrol \

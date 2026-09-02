@@ -26,4 +26,4 @@ fi
 configctl template reload OPNsense/Menu >/dev/null 2>&1 || :
 configctl cron restart >/dev/null 2>&1 || :
 # Volt templates are recompiled on demand; clear every Client Control view without restarting the web GUI.
-rm -f /var/lib/php/cache/*volgodon_clientcontrol*.volt.php
+rm -f /usr/local/opnsense/mvc/app/cache/*volgodon_clientcontrol*.volt.php

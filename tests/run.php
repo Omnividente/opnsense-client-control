@@ -160,6 +160,21 @@ check(
     str_contains($postDeinstall, '/etc/newsyslog.conf.d/clientcontrol'),
     'package uninstall must remove the generated newsyslog entry while preserving audit files'
 );
+$lifecycleScripts = [
+    file_get_contents(__DIR__ . '/../+POST_INSTALL.post'),
+    file_get_contents(__DIR__ . '/../+PRE_DEINSTALL.pre'),
+    $postDeinstall,
+];
+foreach ($lifecycleScripts as $lifecycleScript) {
+    check(
+        str_contains($lifecycleScript, '/usr/local/opnsense/mvc/app/cache/*volgodon_clientcontrol*.volt.php'),
+        'package lifecycle must clear the installed OPNsense Volt cache path'
+    );
+    check(
+        !str_contains($lifecycleScript, '/var/lib/php/cache/'),
+        'package lifecycle must not rely on the obsolete Volt cache path'
+    );
+}
 
 function groupState($mode = 'unlimited')
 {
