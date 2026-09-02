@@ -237,6 +237,8 @@ check(in_array($platform['filter_backend'], ['runtime_registry', 'persistent_mod
     'platform capabilities must select an explicit firewall backend');
 same($platform['filter_backend'] === 'persistent_model', $platform['packet_rate'],
     'packet-rate support must be explicit in the platform matrix');
+same('', $platform['warning'],
+    'the active compatible backend must not raise a permanent operator warning');
 $otherBackend = $platform['filter_backend'] === 'runtime_registry' ? 'persistent_model' : 'runtime_registry';
 $platformTransition = Platform::featureMatrix($otherBackend);
 same(true, $platformTransition['transition_pending'],

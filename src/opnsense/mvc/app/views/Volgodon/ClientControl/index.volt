@@ -16,6 +16,8 @@
     .cc-section-intro { margin: 0 0 14px; color: #555; }
     .cc-technical { margin-top: 14px; }
     .cc-summary-counts { font-size: 15px; margin-bottom: 10px; }
+    .cc-capability-disabled { cursor: not-allowed; opacity: .65; }
+    .cc-capability-disabled input { pointer-events: none; }
 </style>
 
 <script>
@@ -29,7 +31,8 @@ $(document).ready(function () {
         hasGroups: false,
         importPreview: null,
         auditLogDegraded: false,
-        auditLogMessage: ''
+        auditLogMessage: '',
+        packetRateSupported: false
     };
 
     const policyLabels = {
@@ -226,6 +229,57 @@ $(document).ready(function () {
         });
     }
     applyNumericConstraints(document);
+
+    const packetRateUnavailableMessage = '{{ lang._('This firewall version does not support packet-count limiting. It limits how many network packets may pass during a time interval, not transfer speed in Mbit/s. Download, upload, and new TCP connection limits remain available.') }}';
+
+    function setPacketRateCapability(supported) {
+        const disabled = supported !== true;
+        state.packetRateSupported = !disabled;
+        const fields = $('[id="group.packet_rate"], [id="group.packet_rate_seconds"]');
+        const rows = fields.closest('tr');
+        fields.prop('disabled', disabled).attr('aria-disabled', disabled ? 'true' : 'false');
+        rows.toggleClass('cc-capability-disabled', disabled);
+        if (disabled) {
+            fields.attr('title', packetRateUnavailableMessage);
+            rows.attr({
+                title: packetRateUnavailableMessage,
+                tabindex: '0',
+                role: 'button',
+                'aria-disabled': 'true'
+            });
+        } else {
+            fields.removeAttr('title aria-disabled');
+            rows.removeAttr('title tabindex role aria-disabled');
+        }
+    }
+
+    function showPacketRateUnavailable() {
+        BootstrapDialog.show({
+            type: BootstrapDialog.TYPE_INFO,
+            title: '{{ lang._('Packet-count limit unavailable') }}',
+            message: packetRateUnavailableMessage,
+            buttons: [{
+                label: '{{ lang._('Close') }}',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+    }
+
+    $(document).on(
+        'click keydown',
+        '[id="row_group.packet_rate"], [id="row_group.packet_rate_seconds"]',
+        function (event) {
+            if (state.packetRateSupported ||
+                (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ')) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            showPacketRateUnavailable();
+        }
+    );
 
 
     function setBanner(kind, message) {
@@ -546,7 +600,9 @@ $(document).ready(function () {
             $('#cc-managed-count').text(Object.values(data.managed_objects || {}).reduce(function (sum, value) {
                 return sum + Number(value);
             }, 0));
-            const platformWarning = (data.platform || {}).warning || '';
+            const platform = data.platform || {};
+            setPacketRateCapability(platform.packet_rate === true);
+            const platformWarning = platform.transition_pending ? (platform.warning || '') : '';
             $('#cc-platform-warning').toggle(platformWarning !== '').text(platformWarning);
             if (!data.deep_check_required) {
                 $('#cc-deep-check').hide();
@@ -1010,6 +1066,7 @@ $(document).ready(function () {
             $('#refresh-audit').trigger('click');
         }
     });
+    setPacketRateCapability(false);
     refreshGroupSelectors();
     loadSettings();
 });

@@ -1934,9 +1934,13 @@ msgstr "Конфигурация или управляемые объекты и
 msgid "Current network addresses changed after this plan was built. Review the current diff before applying."
 msgstr "После построения плана изменились текущие сетевые адреса. Перед применением проверьте актуальный список изменений."
 
-#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php
-msgid "Compatibility firewall backend is active because the persistent filter model lacks a required capability."
-msgstr "Используется совместимый backend межсетевого экрана: в постоянной модели фильтра отсутствует необходимая возможность."
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Packet-count limit unavailable"
+msgstr "Ограничение пакетов недоступно"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "This firewall version does not support packet-count limiting. It limits how many network packets may pass during a time interval, not transfer speed in Mbit/s. Download, upload, and new TCP connection limits remain available."
+msgstr "Эта версия межсетевого экрана не поддерживает ограничение количества пакетов. Оно задаёт, сколько сетевых пакетов может пройти за выбранный интервал, а не скорость передачи в Мбит/с. Ограничения загрузки, отдачи и новых TCP-соединений остаются доступными."
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
 msgid "Export JSON"
