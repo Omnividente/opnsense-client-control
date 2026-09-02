@@ -61,6 +61,7 @@ if [ -f "$CANDIDATE" ] && [ -f "$INPUT_DIGEST" ] && [ -f "$CONTENT_DIGEST" ] &&
 fi
 
 "$PHP" "$ROOT/tests/run.php"
+sh "$ROOT/tests/deploy-health-contract.sh"
 "$MAKE" -C "$ROOT" \
     PLUGINSDIR="$PLUGINSDIR" \
     WRKDIR="$TMP/work" \

@@ -1934,9 +1934,13 @@ msgstr "Конфигурация или управляемые объекты и
 msgid "Current network addresses changed after this plan was built. Review the current diff before applying."
 msgstr "После построения плана изменились текущие сетевые адреса. Перед применением проверьте актуальный список изменений."
 
-#: src/opnsense/mvc/app/library/Volgodon/ClientControl/Platform.php
-msgid "Compatibility firewall backend is active because the persistent filter model lacks a required capability."
-msgstr "Используется совместимый backend межсетевого экрана: в постоянной модели фильтра отсутствует необходимая возможность."
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "Packet-count limit unavailable"
+msgstr "Ограничение пакетов недоступно"
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "This firewall version does not support packet-count limiting. It limits how many network packets may pass during a time interval, not transfer speed in Mbit/s. Download, upload, and new TCP connection limits remain available."
+msgstr "Эта версия межсетевого экрана не поддерживает ограничение количества пакетов. Оно задаёт, сколько сетевых пакетов может пройти за выбранный интервал, а не скорость передачи в Мбит/с. Ограничения загрузки, отдачи и новых TCP-соединений остаются доступными."
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
 msgid "Export JSON"
@@ -2059,16 +2063,16 @@ msgid "Firewall reload failed: %s"
 msgstr "Сбой перезагрузки межсетевого экрана: %s"
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
-msgid "Managed objects have not been deeply checked in this browser session."
-msgstr "В этой сессии браузера управляемые объекты ещё не проходили глубокую проверку."
+msgid "Check the settings before applying."
+msgstr "Проверьте настройки перед применением."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The deep check could not be completed. See the error above and try again."
+msgstr "Глубокую проверку не удалось завершить. Ознакомьтесь с ошибкой выше и повторите попытку."
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
 msgid "Run deep check"
 msgstr "Запустить глубокую проверку"
-
-#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
-msgid "The latest deep check found no managed-object conflicts."
-msgstr "Последняя глубокая проверка не обнаружила конфликтов управляемых объектов."
 
 #: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
 msgid "The saved change is active, but the full audit history could not be written. Only the bounded config.xml history is available."
@@ -2090,3 +2094,8 @@ msgstr "Изменение отменено, но записать полный 
 #: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/DiagnosticsController.php
 msgid "The full audit history is unavailable. Only the bounded config.xml history is shown and exported."
 msgstr "Полный журнал аудита недоступен. На экране и в экспорте показана только ограниченная история из config.xml."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+#, php-format
+msgid "The table is limited to the latest %s records. Full history is available through JSON export."
+msgstr "Таблица ограничена последними %s записями. Полная история доступна через экспорт JSON."

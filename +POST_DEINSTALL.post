@@ -5,6 +5,6 @@ rm -f /etc/newsyslog.conf.d/clientcontrol \
     /var/run/clientcontrol-uninstalling \
     /var/run/clientcontrol-schedule.json \
     /var/run/clientcontrol-schedule.lock \
-    /var/lib/php/cache/*volgodon_clientcontrol*.volt.php
+    /usr/local/opnsense/mvc/app/cache/*volgodon_clientcontrol*.volt.php
 configctl filter reload >/dev/null 2>&1 || :
 configctl cron restart >/dev/null 2>&1 || :

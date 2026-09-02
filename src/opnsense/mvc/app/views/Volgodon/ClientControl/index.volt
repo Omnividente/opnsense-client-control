@@ -16,6 +16,8 @@
     .cc-section-intro { margin: 0 0 14px; color: #555; }
     .cc-technical { margin-top: 14px; }
     .cc-summary-counts { font-size: 15px; margin-bottom: 10px; }
+    .cc-capability-disabled { cursor: not-allowed; opacity: .65; }
+    .cc-capability-disabled input { pointer-events: none; }
 </style>
 
 <script>
@@ -26,10 +28,12 @@ $(document).ready(function () {
         revision: 0,
         lastPlan: null,
         deepCheckRevision: null,
+        deepCheckInProgress: false,
         hasGroups: false,
         importPreview: null,
         auditLogDegraded: false,
-        auditLogMessage: ''
+        auditLogMessage: '',
+        packetRateSupported: false
     };
 
     const policyLabels = {
@@ -227,6 +231,57 @@ $(document).ready(function () {
     }
     applyNumericConstraints(document);
 
+    const packetRateUnavailableMessage = '{{ lang._('This firewall version does not support packet-count limiting. It limits how many network packets may pass during a time interval, not transfer speed in Mbit/s. Download, upload, and new TCP connection limits remain available.') }}';
+
+    function setPacketRateCapability(supported) {
+        const disabled = supported !== true;
+        state.packetRateSupported = !disabled;
+        const fields = $('[id="group.packet_rate"], [id="group.packet_rate_seconds"]');
+        const rows = fields.closest('tr');
+        fields.prop('disabled', disabled).attr('aria-disabled', disabled ? 'true' : 'false');
+        rows.toggleClass('cc-capability-disabled', disabled);
+        if (disabled) {
+            fields.attr('title', packetRateUnavailableMessage);
+            rows.attr({
+                title: packetRateUnavailableMessage,
+                tabindex: '0',
+                role: 'button',
+                'aria-disabled': 'true'
+            });
+        } else {
+            fields.removeAttr('title aria-disabled');
+            rows.removeAttr('title tabindex role aria-disabled');
+        }
+    }
+
+    function showPacketRateUnavailable() {
+        BootstrapDialog.show({
+            type: BootstrapDialog.TYPE_INFO,
+            title: '{{ lang._('Packet-count limit unavailable') }}',
+            message: packetRateUnavailableMessage,
+            buttons: [{
+                label: '{{ lang._('Close') }}',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+    }
+
+    $(document).on(
+        'click keydown',
+        '[id="row_group.packet_rate"], [id="row_group.packet_rate_seconds"]',
+        function (event) {
+            if (state.packetRateSupported ||
+                (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ')) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            showPacketRateUnavailable();
+        }
+    );
+
 
     function setBanner(kind, message) {
         $('#cc-banner')
@@ -240,6 +295,9 @@ $(document).ready(function () {
         if (data && data.audit_log === 'degraded') {
             state.auditLogDegraded = true;
             state.auditLogMessage = data.audit_log_message || '{{ lang._('The full audit history is unavailable. Only the bounded config.xml history is available.') }}';
+        } else if (data && data.audit_log === 'ok') {
+            state.auditLogDegraded = false;
+            state.auditLogMessage = '';
         }
         $('#cc-audit-warning')
             .toggle(state.auditLogDegraded)
@@ -481,6 +539,7 @@ $(document).ready(function () {
         state.lastPlan = null;
         state.deepCheckRevision = null;
         $('#apply-plan').prop('disabled', true);
+        clearDeepCheckStatus();
         setBanner('warning', message || '{{ lang._('Changes saved. Check and apply them when ready.') }}');
         refreshStatus();
     }
@@ -522,8 +581,13 @@ $(document).ready(function () {
         $('#cc-deep-check-message').text(message);
     }
 
+    function clearDeepCheckStatus() {
+        $('#cc-deep-check').hide();
+        $('#cc-deep-check-message').text('');
+    }
+
     function refreshStatus() {
-        getJson('/api/clientcontrol/service/status').done(function (data) {
+        return getJson('/api/clientcontrol/service/status').done(function (data) {
             updateAuditLogStatus(data);
             state.revision = Number(data.revision || 0);
             $('#cc-revision').text(data.revision);
@@ -543,12 +607,14 @@ $(document).ready(function () {
             $('#cc-managed-count').text(Object.values(data.managed_objects || {}).reduce(function (sum, value) {
                 return sum + Number(value);
             }, 0));
-            const platformWarning = (data.platform || {}).warning || '';
+            const platform = data.platform || {};
+            setPacketRateCapability(platform.packet_rate === true);
+            const platformWarning = platform.transition_pending ? (platform.warning || '') : '';
             $('#cc-platform-warning').toggle(platformWarning !== '').text(platformWarning);
-            if (!data.deep_check_required) {
-                $('#cc-deep-check').hide();
-            } else if (state.deepCheckRevision !== Number(data.revision)) {
-                setDeepCheckStatus('warning', '{{ lang._('Managed objects have not been deeply checked in this browser session.') }}');
+            if (!data.deep_check_required ||
+                (state.deepCheckRevision !== null &&
+                    state.deepCheckRevision !== Number(data.revision))) {
+                clearDeepCheckStatus();
             }
         });
     }
@@ -560,7 +626,9 @@ $(document).ready(function () {
 
             formatTokenizersUI();
             $('.selectpicker').selectpicker('refresh');
-            refreshStatus();
+            refreshStatus().always(function () {
+                requestPlan();
+            });
         });
     }
 
@@ -755,6 +823,7 @@ $(document).ready(function () {
         $('#apply-plan').prop('disabled', data.status !== 'ok' || !hasChanges);
         const conflicts = data.conflicts || [];
         const notices = data.notices || [];
+        const validations = Object.values(data.validations || {});
         const messages = conflicts.concat(notices).map(function (item) {
             return item.message;
         });
@@ -762,13 +831,29 @@ $(document).ready(function () {
             setDeepCheckStatus('danger', messages.join(' | '));
         } else if (notices.length) {
             setDeepCheckStatus('warning', messages.join(' | '));
+        } else if (data.status === 'invalid' || validations.length) {
+            setDeepCheckStatus('danger', validations.join(' | ') || '{{ lang._('Check the settings before applying.') }}');
         } else {
-            setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
+            clearDeepCheckStatus();
         }
     }
 
     function requestPlan() {
-        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()}).done(acceptPlan);
+        if (state.deepCheckInProgress) {
+            return;
+        }
+        state.deepCheckInProgress = true;
+        $('#run-plan, #run-deep-check').prop('disabled', true);
+        clearDeepCheckStatus();
+        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()})
+            .done(acceptPlan)
+            .fail(function () {
+                setDeepCheckStatus('danger', '{{ lang._('The deep check could not be completed. See the error above and try again.') }}');
+            })
+            .always(function () {
+                state.deepCheckInProgress = false;
+                $('#run-plan, #run-deep-check').prop('disabled', false);
+            });
     }
 
     function renderImportPreview(data) {
@@ -849,7 +934,7 @@ $(document).ready(function () {
                     } else {
                         setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
                     }
-                    setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
+                    clearDeepCheckStatus();
                     $('#plan-json').text(renderTechnicalPlan(data));
                     refreshStatus();
                 });
@@ -977,6 +1062,12 @@ $(document).ready(function () {
                 tr.append($('<td/>').text(translatedLabel(resultLabels, entry.result)));
                 tbody.append(tr);
             });
+            const historyWindow = Number(data.history_window || 0);
+            $('#audit-window-note')
+                .toggle(historyWindow > 0)
+                .text(historyWindow > 0
+                    ? '{{ lang._('The table is limited to the latest %s records. Full history is available through JSON export.') }}'.replace('%s', String(historyWindow))
+                    : '');
         });
     });
 
@@ -1001,6 +1092,7 @@ $(document).ready(function () {
             $('#refresh-audit').trigger('click');
         }
     });
+    setPacketRateCapability(false);
     refreshGroupSelectors();
     loadSettings();
 });
@@ -1170,6 +1262,7 @@ $(document).ready(function () {
             <button id="export-audit" class="btn btn-default"><i class="fa fa-download"></i> {{ lang._('Export JSON') }}</button>
         </div>
         <div class="table-responsive"><table class="table table-condensed table-striped"><thead><tr><th>{{ lang._('Date and time') }}</th><th>{{ lang._('User') }}</th><th>{{ lang._('Action') }}</th><th>{{ lang._('Details') }}</th><th>{{ lang._('Result') }}</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+        <p id="audit-window-note" class="text-muted" style="display:none"></p>
     </div>
 </div>
 

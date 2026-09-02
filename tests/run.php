@@ -160,6 +160,21 @@ check(
     str_contains($postDeinstall, '/etc/newsyslog.conf.d/clientcontrol'),
     'package uninstall must remove the generated newsyslog entry while preserving audit files'
 );
+$lifecycleScripts = [
+    file_get_contents(__DIR__ . '/../+POST_INSTALL.post'),
+    file_get_contents(__DIR__ . '/../+PRE_DEINSTALL.pre'),
+    $postDeinstall,
+];
+foreach ($lifecycleScripts as $lifecycleScript) {
+    check(
+        str_contains($lifecycleScript, '/usr/local/opnsense/mvc/app/cache/*volgodon_clientcontrol*.volt.php'),
+        'package lifecycle must clear the installed OPNsense Volt cache path'
+    );
+    check(
+        !str_contains($lifecycleScript, '/var/lib/php/cache/'),
+        'package lifecycle must not rely on the obsolete Volt cache path'
+    );
+}
 
 function groupState($mode = 'unlimited')
 {
@@ -222,6 +237,8 @@ check(in_array($platform['filter_backend'], ['runtime_registry', 'persistent_mod
     'platform capabilities must select an explicit firewall backend');
 same($platform['filter_backend'] === 'persistent_model', $platform['packet_rate'],
     'packet-rate support must be explicit in the platform matrix');
+same('', $platform['warning'],
+    'the active compatible backend must not raise a permanent operator warning');
 $otherBackend = $platform['filter_backend'] === 'runtime_registry' ? 'persistent_model' : 'runtime_registry';
 $platformTransition = Platform::featureMatrix($otherBackend);
 same(true, $platformTransition['transition_pending'],

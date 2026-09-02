@@ -26,8 +26,6 @@ final class Platform
                 $appliedFilterBackend,
                 $filterBackend
             );
-        } elseif ($filterBackend === 'runtime_registry') {
-            $warning = gettext('Compatibility firewall backend is active because the persistent filter model lacks a required capability.');
         }
         return [
             'filter_backend' => $filterBackend,
