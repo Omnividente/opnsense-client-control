@@ -4,6 +4,7 @@ set -eu
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 DEPLOY=$ROOT/tools/deploy.sh
 HEALTH=$ROOT/src/opnsense/scripts/Volgodon/ClientControl/health.php
+POST_INSTALL=$ROOT/+POST_INSTALL.post
 
 extract_function() {
     sed -n "/^$1() {$/,/^}$/p" "$DEPLOY"
@@ -43,6 +44,23 @@ esac
 case "$HEALTH_SOURCE" in
     *"exit(\$status === "*)
         echo 'audit degradation must not control the health process exit code' >&2
+        exit 1
+        ;;
+esac
+
+DEPLOY_SOURCE=$(sed -n '1,$p' "$DEPLOY")
+case "$DEPLOY_SOURCE" in
+    *'/usr/local/sbin/configctl clientcontrol runtime_guard'*) ;;
+    *)
+        echo 'deploy health must verify restored runtime firewall guards' >&2
+        exit 1
+        ;;
+esac
+POST_INSTALL_SOURCE=$(sed -n '1,$p' "$POST_INSTALL")
+case "$POST_INSTALL_SOURCE" in
+    *'configctl filter reload'*) ;;
+    *)
+        echo 'package install must restore filter runtime after deinstall hooks' >&2
         exit 1
         ;;
 esac

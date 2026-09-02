@@ -195,6 +195,8 @@ health() {
         echo 'warning: Client Control audit history is degraded; the healthy package remains installed.' >&2
         echo "$direct_health" >&2
     fi
+    runtime_guard=$(/usr/local/sbin/configctl clientcontrol runtime_guard) || return 1
+    health_status_ok "$runtime_guard" || return 1
 }
 
 if /usr/local/sbin/pkg info -e "$package_name"; then
