@@ -74,6 +74,30 @@ assert.match(renderedScript, /const historyWindow = Number\(data\.history_window
 assert.match(renderedScript, /\$\('#audit-window-note'\)[\s\S]*?\.toggle\(historyWindow > 0\)/);
 assert.match(view, /id="audit-window-note"/);
 
+const deepCheckUi = {visible: true, text: 'stale result'};
+const deepCheckJquery = (selector) => {
+    assert.ok(selector === '#cc-deep-check' || selector === '#cc-deep-check-message');
+    return {
+        hide() {
+            assert.equal(selector, '#cc-deep-check');
+            deepCheckUi.visible = false;
+            return this;
+        },
+        text(value) {
+            assert.equal(selector, '#cc-deep-check-message');
+            deepCheckUi.text = String(value);
+            return this;
+        }
+    };
+};
+const clearDeepCheckStatus = new Function(
+    '$',
+    `return (${extractFunction(renderedScript, 'clearDeepCheckStatus')});`
+)(deepCheckJquery);
+clearDeepCheckStatus();
+assert.equal(deepCheckUi.visible, false, 'clean deep checks must hide the status panel');
+assert.equal(deepCheckUi.text, '', 'clean deep checks must clear stale status text');
+
 const capabilityState = {packetRateSupported: true};
 const capabilityFieldsState = {disabled: false, attributes: {}};
 const capabilityRowsState = {disabledClass: false, attributes: {}};
@@ -162,5 +186,9 @@ assert.equal(popupClosed, true);
 
 assert.match(renderedScript, /setPacketRateCapability\(platform\.packet_rate === true\)/);
 assert.match(renderedScript, /platform\.transition_pending \? \(platform\.warning \|\| ''\) : ''/);
+assert.doesNotMatch(view, /Managed objects have not been deeply checked in this browser session/);
+assert.match(renderedScript, /return getJson\('\/api\/clientcontrol\/service\/status'\)\.done/);
+assert.match(renderedScript, /refreshStatus\(\)\.always\(function \(\) \{\s*requestPlan\(\);/);
+assert.match(view, /The deep check could not be completed/);
 
 console.log('ok Client Control UI state contract');

@@ -28,6 +28,7 @@ $(document).ready(function () {
         revision: 0,
         lastPlan: null,
         deepCheckRevision: null,
+        deepCheckInProgress: false,
         hasGroups: false,
         importPreview: null,
         auditLogDegraded: false,
@@ -538,6 +539,7 @@ $(document).ready(function () {
         state.lastPlan = null;
         state.deepCheckRevision = null;
         $('#apply-plan').prop('disabled', true);
+        clearDeepCheckStatus();
         setBanner('warning', message || '{{ lang._('Changes saved. Check and apply them when ready.') }}');
         refreshStatus();
     }
@@ -579,8 +581,13 @@ $(document).ready(function () {
         $('#cc-deep-check-message').text(message);
     }
 
+    function clearDeepCheckStatus() {
+        $('#cc-deep-check').hide();
+        $('#cc-deep-check-message').text('');
+    }
+
     function refreshStatus() {
-        getJson('/api/clientcontrol/service/status').done(function (data) {
+        return getJson('/api/clientcontrol/service/status').done(function (data) {
             updateAuditLogStatus(data);
             state.revision = Number(data.revision || 0);
             $('#cc-revision').text(data.revision);
@@ -604,10 +611,10 @@ $(document).ready(function () {
             setPacketRateCapability(platform.packet_rate === true);
             const platformWarning = platform.transition_pending ? (platform.warning || '') : '';
             $('#cc-platform-warning').toggle(platformWarning !== '').text(platformWarning);
-            if (!data.deep_check_required) {
-                $('#cc-deep-check').hide();
-            } else if (state.deepCheckRevision !== Number(data.revision)) {
-                setDeepCheckStatus('warning', '{{ lang._('Managed objects have not been deeply checked in this browser session.') }}');
+            if (!data.deep_check_required ||
+                (state.deepCheckRevision !== null &&
+                    state.deepCheckRevision !== Number(data.revision))) {
+                clearDeepCheckStatus();
             }
         });
     }
@@ -619,7 +626,9 @@ $(document).ready(function () {
 
             formatTokenizersUI();
             $('.selectpicker').selectpicker('refresh');
-            refreshStatus();
+            refreshStatus().always(function () {
+                requestPlan();
+            });
         });
     }
 
@@ -814,6 +823,7 @@ $(document).ready(function () {
         $('#apply-plan').prop('disabled', data.status !== 'ok' || !hasChanges);
         const conflicts = data.conflicts || [];
         const notices = data.notices || [];
+        const validations = Object.values(data.validations || {});
         const messages = conflicts.concat(notices).map(function (item) {
             return item.message;
         });
@@ -821,13 +831,29 @@ $(document).ready(function () {
             setDeepCheckStatus('danger', messages.join(' | '));
         } else if (notices.length) {
             setDeepCheckStatus('warning', messages.join(' | '));
+        } else if (data.status === 'invalid' || validations.length) {
+            setDeepCheckStatus('danger', validations.join(' | ') || '{{ lang._('Check the settings before applying.') }}');
         } else {
-            setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
+            clearDeepCheckStatus();
         }
     }
 
     function requestPlan() {
-        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()}).done(acceptPlan);
+        if (state.deepCheckInProgress) {
+            return;
+        }
+        state.deepCheckInProgress = true;
+        $('#run-plan, #run-deep-check').prop('disabled', true);
+        clearDeepCheckStatus();
+        queryJson('/api/clientcontrol/service/plan', {strategy: $('#plan-strategy').val()})
+            .done(acceptPlan)
+            .fail(function () {
+                setDeepCheckStatus('danger', '{{ lang._('The deep check could not be completed. See the error above and try again.') }}');
+            })
+            .always(function () {
+                state.deepCheckInProgress = false;
+                $('#run-plan, #run-deep-check').prop('disabled', false);
+            });
     }
 
     function renderImportPreview(data) {
@@ -908,7 +934,7 @@ $(document).ready(function () {
                     } else {
                         setBanner('success', '{{ lang._('Changes applied. OPNsense rules were reloaded and checked.') }}');
                     }
-                    setDeepCheckStatus('success', '{{ lang._('The latest deep check found no managed-object conflicts.') }}');
+                    clearDeepCheckStatus();
                     $('#plan-json').text(renderTechnicalPlan(data));
                     refreshStatus();
                 });

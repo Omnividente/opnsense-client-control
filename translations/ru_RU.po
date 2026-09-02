@@ -2063,16 +2063,16 @@ msgid "Firewall reload failed: %s"
 msgstr "Сбой перезагрузки межсетевого экрана: %s"
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
-msgid "Managed objects have not been deeply checked in this browser session."
-msgstr "В этой сессии браузера управляемые объекты ещё не проходили глубокую проверку."
+msgid "Check the settings before applying."
+msgstr "Проверьте настройки перед применением."
+
+#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
+msgid "The deep check could not be completed. See the error above and try again."
+msgstr "Глубокую проверку не удалось завершить. Ознакомьтесь с ошибкой выше и повторите попытку."
 
 #: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
 msgid "Run deep check"
 msgstr "Запустить глубокую проверку"
-
-#: src/opnsense/mvc/app/views/Volgodon/ClientControl/index.volt
-msgid "The latest deep check found no managed-object conflicts."
-msgstr "Последняя глубокая проверка не обнаружила конфликтов управляемых объектов."
 
 #: src/opnsense/mvc/app/controllers/Volgodon/ClientControl/Api/ClientControlControllerBase.php
 msgid "The saved change is active, but the full audit history could not be written. Only the bounded config.xml history is available."
