@@ -2,6 +2,18 @@
 
 [![GitHub-only review](https://github.com/Omnividente/opnsense-client-control/actions/workflows/github-review.yml/badge.svg)](https://github.com/Omnividente/opnsense-client-control/actions/workflows/github-review.yml)
 
+## Overview
+
+`os-client-control` manages per-client network access and bandwidth through native OPNsense aliases, firewall rules, and Traffic Shaper objects. Organize clients into groups, set individual or shared limits, and preview changes before explicitly applying them. Configuration saves alone do not change traffic.
+
+The plugin detects conflicts with manual edits to its managed objects, rolls back configuration when applying changes fails, and keeps an audit log.
+
+**Verified platform:** TING `1.14.6_1` with OPNsense ABI `24.7` (`amd64`). Other versions, including `25.x` and `26.x`, are not verified; they require a build on the target system and runtime verification, not reuse of the `24.7` package.
+
+**Installation and usage (Russian):** [docs/USAGE_RU.md](docs/USAGE_RU.md).
+
+## Документация на русском
+
 `os-client-control` — плагин для управления доступом и скоростью отдельных клиентов сети. Он хранит понятный список групп, клиентов и их IP/MAC-адресов, а затем создаёт штатные объекты OPNsense: псевдонимы, правила межсетевого экрана и ограничения Traffic Shaper.
 
 Плагин не меняет трафик сразу после сохранения формы. Сначала администратор проверяет список изменений, затем отдельно применяет его.
